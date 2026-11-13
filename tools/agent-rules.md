@@ -1,0 +1,2 @@
+# Development skills (devskills)
+For every development task or ticket — requirement analysis, feasibility, impact, spec, code, tests, review, commit — invoke the `dev-orchestrate` skill first and follow its skill routing: before working on an area, load every domain skill whose area the task touches (database/deletes/locks → change-database, endpoints → design-api, jobs/external calls → design-reliability, tests → test-safely, reviewing a diff/PR or your own change → review-code, …), even for small changes, specs and reviews. End with "Skills applied" and their rule IDs.

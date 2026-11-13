@@ -1,0 +1,49 @@
+[project]
+name = "devskills"
+version = "1.0.0"
+description = "Developer skill set for AI coding agents: SKILL.md workflows plus a stdlib-only Python runtime for evidence-producing checks."
+readme = "README.md"
+# The runtime needs only the standard library (tomllib → 3.11+). Playwright currently declares support up to 3.14.
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+# Screenshots and visual checks (verify-ui); then run `python -m playwright install chromium`.
+ui = ["playwright>=1.64.1"]
+# Faster PNG decoding for visual-diff (pure-Python fallback otherwise).
+imaging = ["pillow>=13.0.0"]
+# PDF text in the project knowledge index (index-project-knowledge).
+pdf = ["pypdf>=6.21.3"]
+# API-011 offline sample/schema validation; other commands remain stdlib-only.
+contracts = ["jsonschema==4.26.0"]
+# Development tools for this repository (tests themselves use only unittest).
+dev = ["ruff>=0.17.3"]
+
+[project.scripts]
+devskills = "devskills.cli:main"
+
+[build-system]
+requires = ["setuptools>=84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+devskills = ["netguard/*.py"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py311"
+
+[tool.ruff.lint.per-file-ignores]
+# Shims and the installer must start on old interpreters to print a clear "Python too old" message,
+# and installers may strip the executable bit: keep %-formatting, timezone.utc and the version guard.
+"tools/ds_shim.py" = ["EXE001", "UP031", "RUF100"]
+"skills/*/scripts/ds.py" = ["EXE001", "UP031", "RUF100"]
+"agent-skills.py" = ["EXE001", "UP017", "UP036", "RUF100"]
+# Generated into each project as .knowledge/build.py; stays self-contained and stdlib-only.
+"src/devskills/knowledge_template.py" = ["EXE001", "RUF012"]
+".knowledge/build.py" = ["EXE001", "RUF012"]
+# Playwright handlers close over per-iteration lists on purpose (see the comment in the loop).
+"src/devskills/screenshot.py" = ["B023"]

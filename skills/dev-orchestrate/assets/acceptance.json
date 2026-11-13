@@ -1,0 +1,54 @@
+{
+  "_comment": "Illustrative criteria only, not executed evidence. Replace with the user's actual requirements and real references. Evidence kinds: test (path::name or path::Class::method, exact parameter id when applicable, matched to a passing testcase in the linked check's JUnit report), check (a recorded check id; proves only that check's scope), artifact (file under the run or repo), review (manual note = weak). Tags drive coverage hints: concurrency, rollback, migration, contract, authz, ui-state, a11y, failure, money, idempotency, regression. preservation/refactor tags additionally require the paired baseline below; copy baseline_state exactly from the baseline test check's details.source_state. The same exact tests must pass before/after with unchanged test sources. A bugfix regression may fail before the fix and is separate from preservation.",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "text": "Sending the same create-order request twice (same Idempotency-Key) creates one order",
+      "tags": ["idempotency", "money"],
+      "evidence": [
+        {"test": "orders/tests/test_create_order.py::test_same_idempotency_key_creates_one_order", "check": "tests.unit"}
+      ]
+    },
+    {
+      "id": "AC-2",
+      "text": "Two buyers of the last item: exactly one succeeds, stock never negative",
+      "tags": ["concurrency"],
+      "evidence": [
+        {"test": "orders/tests/test_stock_race.py::test_only_one_buyer_wins", "check": "tests.integration"}
+      ]
+    },
+    {
+      "id": "AC-3",
+      "text": "User A cannot read or export user B's orders; denied requests change nothing",
+      "tags": ["authz"],
+      "evidence": [
+        {"test": "orders/tests/test_authorization_matrix.py::test_access", "check": "tests.integration"}
+      ]
+    },
+    {
+      "id": "AC-4",
+      "text": "Order list shows loading, empty and error states and is usable with the keyboard",
+      "tags": ["ui-state", "a11y"],
+      "evidence": [
+        {"check": "ui.screenshot"},
+        {"artifact": "artifacts/screens/orders-mobile.png"}
+      ]
+    },
+    {
+      "id": "KEEP-1",
+      "text": "Existing order totals, errors and side effects stay unchanged outside the requested fix",
+      "tags": ["preservation"],
+      "preservation": {
+        "baseline_run": "<baseline-run-id>",
+        "baseline_check": "tests.unit",
+        "baseline_state": {
+          "head": "<full-commit-id-or-null>",
+          "diff_digest": "<captured-SHA-256>"
+        }
+      },
+      "evidence": [
+        {"test": "orders/tests/test_totals_characterization.py::test_totals_match_baseline", "check": "tests.unit"}
+      ]
+    }
+  ]
+}

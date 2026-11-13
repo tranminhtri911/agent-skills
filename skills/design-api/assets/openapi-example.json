@@ -1,0 +1,47 @@
+{
+  "openapi": "3.0.3",
+  "info": {"title": "Fictional API-011 fixture; not a running API", "version": "1.0.0"},
+  "paths": {
+    "/widgets": {
+      "post": {
+        "summary": "Fictional public widget creation",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {
+            "type": "object", "required": ["name"], "additionalProperties": false,
+            "properties": {
+              "name": {"type": "string", "minLength": 1, "maxLength": 120},
+              "note": {"type": "string", "nullable": true, "maxLength": 500}
+            }
+          }}}
+        },
+        "responses": {
+          "201": {
+            "description": "Fictional created widget",
+            "headers": {"Location": {"schema": {"type": "string"}}},
+            "content": {"application/json": {"schema": {
+              "type": "object", "required": ["id", "name", "note"], "additionalProperties": false,
+              "properties": {
+                "id": {"type": "integer", "minimum": 1},
+                "name": {"type": "string", "minLength": 1, "maxLength": 120},
+                "note": {"type": "string", "nullable": true, "maxLength": 500}
+              }
+            }}}
+          },
+          "422": {
+            "description": "Fictional invalid name",
+            "content": {"application/problem+json": {"schema": {
+              "type": "object", "required": ["code", "status", "detail"], "additionalProperties": false,
+              "properties": {
+                "code": {"type": "string", "enum": ["VALIDATION_ERROR"]},
+                "status": {"type": "integer", "enum": [422]},
+                "detail": {"type": "string"}
+              }
+            }}}
+          }
+        }
+      }
+    }
+  }
+}

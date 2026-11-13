@@ -1,0 +1,68 @@
+{
+  "format_version": 1,
+  "base_url": "http://127.0.0.1:8000",
+  "endpoints": [{
+    "method": "POST",
+    "path": "/widgets",
+    "documentation": "references/automatic-examples.md#bundled-fictional-contract",
+    "sources": ["references/automatic-examples.md"],
+    "purpose": "Fictional fixture demonstrating sample validation; no implementation or running API is asserted.",
+    "permissions": "Public in this fictional contract; synthetic data only. Real projects must use their actual policy.",
+    "security": [],
+    "inputs": {
+      "body:application/json:": {
+        "description": "JSON object; name required, note optional. See the linked synthetic schema for exact types.",
+        "omitted": "Required request body; omission is invalid.",
+        "constraints": "Unknown fields rejected; name is 1-120 characters; note is null or at most 500 characters.",
+        "example": {"name": "Demo widget", "note": null}
+      },
+      "body:application/json:/name": {
+        "description": "Required string naming the fictional widget.",
+        "omitted": "Missing name is invalid.",
+        "constraints": "String, 1-120 characters; null is invalid.",
+        "example": "Demo widget"
+      },
+      "body:application/json:/note": {
+        "description": "Optional nullable string note.",
+        "omitted": "In this fixture contract the created note is null when omitted.",
+        "constraints": "String up to 500 characters, or null; empty string remains empty.",
+        "example": null
+      }
+    },
+    "effects": {
+      "changes": "Fictional successful creation adds widget 42 with the displayed name/note.",
+      "preserves": "All existing widgets and master/shared data retain IDs and contents.",
+      "failure": "Validation rejection creates no widget and leaves all existing data unchanged.",
+      "external": "No email, payment, job, event or file effect is part of this fictional operation.",
+      "transaction": "The fictional row creation is one local DB unit; no independent-DB atomicity is asserted.",
+      "retry": "This fixture models no idempotency protocol; real create APIs must document their actual duplicate/unknown-outcome policy."
+    },
+    "applicability": {
+      "validation": {"cases": ["invalid-name"]},
+      "unauthenticated": {"reason": "This fictional operation is explicitly public (security is empty)."},
+      "forbidden": {"reason": "This fictional operation declares no role/owner restriction; real policies must be documented."},
+      "not_found": {"reason": "This collection-create fixture accepts no existing-resource identifier."},
+      "conflict": {"reason": "No uniqueness/version conflict is represented in this minimal fictional schema."},
+      "rate_limit": {"reason": "Transport/middleware limits are outside this minimal fictional contract; real contracts must include applicable limits and responses."}
+    },
+    "cases": [{
+      "id": "created",
+      "trigger": "Synthetic Demo widget input; fictional widget ID 42 is returned.",
+      "curl": "curl --max-time 10 --request POST 'http://127.0.0.1:8000/widgets' --header 'Content-Type: application/json' --data-raw '{\"name\":\"Demo widget\",\"note\":null}'",
+      "request": {"path": {}, "query": {}, "headers": {"Content-Type": "application/json"}, "body": {"name": "Demo widget", "note": null}},
+      "request_valid": true,
+      "response": {"status": 201, "headers": {"Content-Type": "application/json", "Location": "/widgets/42"}, "body": {"id": 42, "name": "Demo widget", "note": null}},
+      "assertions": ["Only the new widget is created; existing/master rows stay unchanged; no external effects."],
+      "verification": {"status": "illustrative"}
+    }, {
+      "id": "invalid-name",
+      "trigger": "The name is empty and violates minLength.",
+      "curl": "curl --max-time 10 --request POST 'http://127.0.0.1:8000/widgets' --header 'Content-Type: application/json' --data-raw '{\"name\":\"\"}'",
+      "request": {"path": {}, "query": {}, "headers": {"Content-Type": "application/json"}, "body": {"name": ""}},
+      "request_valid": false,
+      "response": {"status": 422, "headers": {"Content-Type": "application/problem+json"}, "body": {"code": "VALIDATION_ERROR", "status": 422, "detail": "Name must contain at least one character."}},
+      "assertions": ["No widget is created; existing data stays unchanged; no jobs or messages are emitted."],
+      "verification": {"status": "illustrative"}
+    }]
+  }]
+}
