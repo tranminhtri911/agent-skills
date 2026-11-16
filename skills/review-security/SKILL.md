@@ -22,6 +22,10 @@ Load each with the Skill tool before working on that part; dev-orchestrate route
 
 ## Procedure
 
+Before accessing cloud accounts or secrets during a review, follow dev-orchestrate OPS-011: warn with exact actions, account/profile, environment, target and risks/costs, and wait for explicit approval. Existing keys/profiles, SSO/ambient sessions, read-only intent and a general request to audit do not grant permission; even identity and connection checks need approval. Review source and credential-free local fixtures while waiting; never open credential files or expose secret values.
+
+Every non-local database connection or operation during a review also requires a warning and explicit approval under OPS-012, whether cloud or non-cloud. This includes SELECT, schema/plan inspection, health checks and backups via existing sessions, scripts, tunnels or MCP. Review code and already-provided local artifacts while waiting; do not probe a remote DB to establish its identity or permissions before approval.
+
 1. **Threat model (minutes, not days).** Assets, actors/roles, entry points, trust boundaries, sensitive data, abuse cases. One paragraph for small changes; explicit for auth, payments, uploads and tenant isolation.
 2. **Walk the attack catalog** for every entry point you touched: [attack-catalog.md](references/attack-catalog.md) — XSS, SQL/NoSQL injection, command/template injection, path traversal & file upload, SSRF, open redirect, CSRF, broken object/function-level authorization (IDOR), mass assignment, insecure deserialization/XXE, JWT/session/cookie flaws, CORS misconfiguration, DoS (rate limits, payload/regex/pagination limits), secrets and logging.
 3. **Static signals.** `DS check-code` (XSS sinks, SQL built from strings, request data in file paths/URLs/redirects/templates, JWT without verification, weak password hashing, CORS with credentials, mass assignment, ReDoS, login routes without a rate limiter) and `DS scan-secrets` (values are always redacted). Infrastructure in the change (IAM, security groups, buckets, databases): `DS check-infra` and the design-infrastructure rules (least privilege, private by default).

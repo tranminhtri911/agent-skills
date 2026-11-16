@@ -58,6 +58,8 @@ Isolation: Postgres/MySQL default (READ COMMITTED / REPEATABLE READ) does not pr
 
 ## Query plans safely per engine (IDX-008, IDX-009)
 
+Before any connection, query, plan inspection or statistics update on a non-local database, follow dev-orchestrate OPS-012: warn with the exact commands, server/environment, database, purpose and risks, then wait for explicit approval. This includes estimated plans and read-only accounts on dev/STG/production or any other remote/shared DB, including through localhost tunnels. The examples below explain execution effects; they do not grant access. Review already-provided plans offline or use a confirmed local disposable DB while waiting.
+
 Read the plan of the SQL the application really sends (ORM output, EF Core `ToQueryString()`, the stored procedure body with representative parameters), on synthetic data sized like production. Statistics must be current (`ANALYZE`, `UPDATE STATISTICS`) or the plan lies.
 
 | Engine | Estimated plan — does not execute | Actual plan — **executes the statement** |

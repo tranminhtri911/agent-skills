@@ -121,19 +121,35 @@ flowchart TD
     N -->|No| Q["FAIL + diff image"]
 ```
 
-## 5. Confirm dangerous commands only on non-local servers
+## 5. Approve cloud access, all non-local DB operations and dangerous non-local commands
 
 ```mermaid
 flowchart TD
-    A["Identify the affected resource and command effect"] --> B{"Dangerous command on a known or suspected non-local server?"}
-    B -->|"No: in-scope local work or read-only remote inspection"| C["Proceed without dangerous-command confirmation"]
+    A["Identify resource and effect without cloud or remote DB access"] --> CLOUD{"Cloud connection or credential use, including reads?"}
+    CLOUD -->|Yes| WARN["Warn: exact actions/queries, account/profile, server/environment, database/target, purpose, risks/costs"]
+    WARN --> DIALOG["Interactive confirmation: icon + short action/environment title; Refuse / Allow exact action"]
+    DIALOG --> APPROVE{"User explicitly approved these exact actions and targets?"}
+    APPROVE -->|No| WAIT["Wait; continue independent offline work"]
+    WAIT -->|User explicitly approves| E["Execute only within approved scope"]
+    APPROVE -->|Yes| E
+    CLOUD -->|No| REMOTEDB{"Any non-local database connection or operation?"}
+    REMOTEDB -->|Yes| DBWARN["Warn: exact commands/queries, server/environment, database, purpose, risks"]
+    DBWARN --> DIALOG
+    REMOTEDB -->|No| B{"Dangerous command on a known or suspected non-local server?"}
+    B -->|"No: local work or other read-only inspection"| C["Proceed without dangerous-command confirmation"]
     B -->|"Yes: dev, STG, prod or other remote/shared server"| D{"Same target and effect already authorized?"}
-    D -->|"Yes"| E["Execute within existing authorization"]
-    D -->|"No"| F["Show server and effect; await confirmation"]
+    D -->|"Yes"| E
+    D -->|"No"| F["Show icon/action title, server and effect in supported confirmation UI; await explicit answer"]
     F -->|"User confirms"| E
 ```
 
-Judge the affected resource, including remote targets reached through SSH, Docker/Kubernetes contexts, cloud CLIs or localhost tunnels. Clarify the server before a dangerous step if concrete signs suggest a remote target. Existing user restrictions and task scope still apply. The automatic Bash guard hook and blanket permission `ask` rules remain retired. Remove old settings with `python3 agent-skills.py guard --remove`; unrelated settings remain intact. Authorization persists across commands and turns.
+OPS-011 requires a warning and explicit approval before using any cloud profile, key, token, service account, SSO session or ambient credentials through CLI, SDK, scripts, Terraform or MCP, on every environment. Read-only inventory, identity/login/connection checks and remote plans/dry runs are included. Existing credentials or a general request to inspect/test are not approval. Do not connect to discover account details before approval; clarify unknown targets without exposing secrets. Approval covers only the exact actions listed; changed targets or additional actions need a new warning and approval.
+
+OPS-012 requires the same warning-and-wait boundary for every non-local database connection or operation, cloud or non-cloud: SELECT, schema/plan inspection, health checks, exports/backups, writes, migrations, restores and maintenance. State exact commands/queries, server/environment, database, purpose and risks before asking. Existing sessions, scripts, SSH/tunnels, remote contexts, MCP and localhost ports do not make a remote DB local. General inspect/debug/test requests are not approval. Do not connect to identify/validate an unknown target before approval. Cloud DB access must satisfy both rules.
+
+OPS-013 presents missing approval through the host's supported interactive confirmation tool, with an icon and short action/environment title, e.g. `🗄️ Đọc DB · STG`. Put exact actions and targets, purpose and risks below; offer refusal first and scoped approval second. A preselected choice, asynchronous tool return, dismissal or silence grants no permission. Wait for the actual explicit reply. If no suitable tool is available, report that limitation and wait in chat; never change session permissions to force a native popup. [Protocol and example](../skills/dev-orchestrate/references/approval-dialog.md).
+
+Judge the affected resource, including remote targets reached through SSH, Docker/Kubernetes contexts, cloud CLIs or localhost tunnels. Clarify the server before a dangerous step if concrete signs suggest a remote target. Existing stricter user restrictions and task scope still apply. The automatic Bash guard hook and blanket permission `ask` rules remain retired; they do not enforce OPS-011/012 or create a native approval dialog. Remove old settings with `python3 agent-skills.py guard --remove`; unrelated settings remain intact. Authorization persists only within its approved scope.
 
 ## 6. Knowledge index (index-project-knowledge)
 

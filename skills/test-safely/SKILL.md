@@ -22,6 +22,10 @@ Load each with the Skill tool before working on that part; dev-orchestrate route
 
 ## Profiles
 
+Cloud access requires the warning and explicit approval in dev-orchestrate OPS-011 before any test, script or tool uses a cloud profile, key, token, service account, SSO session or ambient credentials, including read-only and identity/connection checks. `provider_sandbox`, `--allow-host` and a general request to test are not cloud approval. Inspect credential discovery and SDK calls before execution; default to credential-free local mocks. Approval for a cloud connection does not waive the test isolation, no-real-payment or other safety restrictions below.
+
+Every non-local database connection or operation requires the warning and explicit approval in OPS-012, including SELECT, schema/plan inspection, health/connection checks and backups through apps/scripts/tests, existing sessions or localhost tunnels. A general request to test is not approval; do not connect to validate an unknown target first. Use disposable confirmed local databases. Approval for remote DB access does not waive the profiles' prohibition on shared/staging/production test data or outbound access.
+
 | Profile | Allowed | Not allowed |
 | --- | --- | --- |
 | `unit_offline` (default) | pure unit tests, fakes, fake clock, local fixtures | network beyond loopback, credentials, side effects |

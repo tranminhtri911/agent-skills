@@ -24,6 +24,7 @@ Load each with the Skill tool before working on that part; dev-orchestrate route
 
 ## Safety (always)
 
+- Before any cloud connection or use of a profile, key, token, service account, SSO session or ambient credentials, follow dev-orchestrate OPS-011: show the exact actions, account/profile, environment, target and risks/costs, then wait for explicit approval. This includes read-only inventory, identity/login/connection checks, remote state and remote plans/dry runs through CLI, SDK, scripts, Terraform or MCP. Do not call cloud to discover the account before approval. Credential-free local mocks and genuinely offline checks can proceed; stricter no-cloud/manual-only restrictions still apply.
 - The agent writes code and runs only offline checks: `fmt`, `validate`, static scanners, `DS check-infra`. It never runs `apply`, `destroy`, `import`, `state` commands, cloud CLI writes, or `plan` against a real account or state backend without the user's explicit yes in this conversation; production never (dangerous operations).
 - No credentials in code, tfvars, state outputs or the transcript; never read `~/.aws/credentials`, service-account keys or `.env`.
 - `terraform init -backend=false` downloads providers: the user runs it, or approves it.
