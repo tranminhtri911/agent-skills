@@ -2,7 +2,7 @@
 name: discover-codebase
 description: "Use when about to change, specify or estimate work on code you have not fully traced — a new ticket, an unfamiliar feature, a rename or type change, a bug with an unclear cause, a question about which tables, screens or APIs a change affects, or a diff that grows beyond the files already read. Triggers (vi): code này chạy thế nào, ảnh hưởng tới đâu, bảng nào bị tác động, lỗi chưa rõ nguyên nhân, tính năng chưa quen, khả thi. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   suite: devskills
 ---
 

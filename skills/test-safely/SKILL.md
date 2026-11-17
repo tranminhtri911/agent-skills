@@ -2,7 +2,7 @@
 name: test-safely
 description: "Use when planning, writing or running tests, test scripts or test data (SQL seeds, e2e), reproducing a bug, or verifying a change — especially anything touching money or payments, batch jobs, emails/SMS/push, paid or third-party APIs, production-like data, load or performance tests, migrations, or shared servers. Triggers (vi): viết test, chạy test, unit test, e2e, mock, dữ liệu giả, tái hiện lỗi, kiểm thử thanh toán/batch/email. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   suite: devskills
 ---
 
@@ -62,11 +62,12 @@ For browser E2E or UI verification, use `verify-ui` to inspect affected screens 
 
 Also report unusual UI or UX that conflicts with the established product context, target users/roles or business flow (for example SaaS workspace/billing context or end-user task clarity). Include evidence, user impact and a suggested improvement or clarification; distinguish confirmed defects from uncertain concerns and optional suggestions. Report these findings even when tests pass, without expanding the task into an unrequested redesign or business-rule change.
 
-## Rules (TEST-001…TEST-012, SAFE-001…SAFE-013)
+## Rules (TEST-001…TEST-013, SAFE-001…SAFE-013)
 
 - Every important acceptance criterion maps to a test or review evidence; bugfixes get a regression test when reproducible safely.
 - Assert behavior and invariants, not mock call counts.
 - Money/auth/concurrency/transactions need negative and failure-path tests.
+- **TEST-013:** For business behavior, use the [scenario review](references/test-matrix.md#derive-scenarios-from-the-real-flow) during analysis and before handover. Establish which source defines expected behavior, test assumptions relied on by the change, and record the outcomes and coverage gaps. Use production-shaped synthetic fixtures in isolation under the profiles above.
 - Control seed, clock, IDs, locale and time zone.
 - Never delete, skip or xfail tests to get green; quarantine needs owner and expiry; a retry that passes is still flaky.
 - A required test that did not run is `blocked`/`not_run`; collection errors are not passes.

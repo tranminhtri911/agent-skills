@@ -35,6 +35,7 @@ Work top to bottom; a stage that finds a blocking design problem can stop the re
 ## 5. Tests
 
 - [ ] Each acceptance criterion and each risky path has a test; failure paths, not only the happy path.
+- [ ] TEST-013: Check the scenarios against actual callers, supported limits, existing data and downstream outputs. Look for a realistic combination the suite could miss, and confirm any guard the change depends on at the relevant entry point.
 - [ ] The test would fail if the code were broken (mutate the condition mentally — does an assertion catch it?).
 - [ ] Assertions check outcomes (rows, responses, emitted events), not only "no exception".
 - [ ] DB behavior (transactions, locks, migrations) tested on a real isolated engine, not a mock.

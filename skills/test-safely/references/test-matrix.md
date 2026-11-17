@@ -1,5 +1,14 @@
 # Test matrix by situation (plan §19.2)
 
+## Derive scenarios from the real flow
+
+1. Start with the customer's concrete example when available. Trace the user role, entry point, validation, supported values and states, existing records, downstream consumers and side effects. Cite the source of each material expectation. If the requirement and current code disagree, record expected versus observed behavior. Leave unresolved business decisions open.
+2. Use the matrix below to challenge the flow. For each applicable business limit, try the nearest supported values on both sides and at the limit. Combine interacting constraints, such as maximum duration plus cleanup time across midnight. Test the assumption that a guard enforces the limit through the entry points that depend on it. Include realistic existing data, failures, retries and partial completion when relevant.
+3. Assert the outcome people or downstream systems rely on. For example, check the amount and total on the generated PDF against the booking's saved rate. A successful download only establishes delivery. For overlaps, assert both a conflict before cleanup ends and the allowed booking at the release boundary when the contract permits it.
+4. Record the scenario, its expected outcome and source, and the test or observed evidence in the existing plan, acceptance criteria or result. Report blocked or unexecuted scenarios and explain material exclusions. Review this against the changed flow before handover. A passing suite or trace tag covers only the cases it actually checks.
+
+## Scenario matrix
+
 | Situation | Focus | Success evidence |
 | --- | --- | --- |
 | Null/empty/zero/negative/over-limit input | unit + schema | rejected/accepted per contract |

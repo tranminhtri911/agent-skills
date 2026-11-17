@@ -146,5 +146,85 @@ class GateStyleHintTest(unittest.TestCase):
         self.assertIn("framework-react.md", self.edit("web/app/page.tsx")["hookSpecificOutput"]["additionalContext"])
 
 
+# A stand-in for the code-style runtime: the test only needs to see which install the hook picked.
+STUB_STYLE_ANSWER = (
+    "import json\n"
+    "print(json.dumps({'language': 'python', 'root': 'api', 'repository': 'r', 'path': 'api/billing/views.py',\n"
+    "                  'frameworks': ['django'], 'references': ['language-python.md'], 'style_tools': []}))\n")
+
+
+def apply_patch_command(*sections):
+    """The text Codex passes as tool_input.command for apply_patch."""
+    return "*** Begin Patch\n" + "".join(sections) + "*** End Patch\n"
+
+
+class CodexStyleHintTest(unittest.TestCase):
+    """Codex edits files with apply_patch; the gate's codex-style hook adds the style references without blocking."""
+
+    def setUp(self):
+        self.home = make_temp_dir(self)
+        self.repo = make_monorepo(self)
+        if any(part in str(self.repo).lower() for part in ("/tmp/", "/private/tmp/")):
+            self.skipTest("temp dir is on a path the gate skips by design")
+
+    def run_hook(self, tool_name, command, session_id="c1"):
+        env = dict(os.environ, HOME=str(self.home), DEVSKILLS_CODE_STYLE_DS=str(CODE_STYLE_DS))
+        env.pop("SKILL_GATE", None)
+        payload = {"session_id": session_id, "cwd": str(self.repo), "hook_event_name": "PreToolUse",
+                   "tool_name": tool_name, "tool_input": {"command": command}}
+        completed = subprocess.run([sys.executable, str(GATE), "codex-style"], input=json.dumps(payload),
+                                   capture_output=True, text=True, env=env, check=False, timeout=60)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        return json.loads(completed.stdout) if completed.stdout.strip() else None
+
+    def test_patched_file_gets_its_references_without_blocking(self):
+        command = apply_patch_command("*** Update File: android/app/src/main/kotlin/InvoiceList.kt\n@@\n-a\n+b\n")
+        specific = self.run_hook("apply_patch", command)["hookSpecificOutput"]
+        self.assertEqual(specific["hookEventName"], "PreToolUse")
+        self.assertNotIn("permissionDecision", specific, "a style hint never blocks the patch")
+        self.assertIn("language-kotlin.md", specific["additionalContext"])
+        self.assertIn("framework-android-compose.md", specific["additionalContext"])
+
+    def test_every_file_of_one_patch_is_covered_once_per_root_and_language(self):
+        command = apply_patch_command(
+            "*** Add File: api/billing/serializers.py\n+x = 1\n",
+            "*** Update File: api/billing/views.py\n@@\n-a\n+b\n",
+            "*** Update File: web/app/page.tsx\n@@\n-a\n+b\n",
+            "*** Delete File: web/.prettierrc\n")
+        context = self.run_hook("apply_patch", command)["hookSpecificOutput"]["additionalContext"]
+        self.assertEqual(context.count("framework-django.md"), 1, context)
+        self.assertIn("framework-react.md", context)
+        self.assertIsNone(self.run_hook("apply_patch", command), "already hinted for this session")
+
+    def test_a_moved_file_is_judged_by_its_new_path(self):
+        command = apply_patch_command("*** Update File: tools/old.txt\n*** Move to: tools/report.go\n@@\n-a\n+b\n")
+        self.assertIn("language-go.md", self.run_hook("apply_patch", command)["hookSpecificOutput"]["additionalContext"])
+
+    def test_other_tools_and_non_code_files_get_nothing(self):
+        self.assertIsNone(self.run_hook("Bash", "sed -i s/a/b/ api/billing/views.py"))
+        self.assertIsNone(self.run_hook("apply_patch", apply_patch_command("*** Update File: web/.prettierrc\n@@\n-a\n+b\n")))
+
+    def test_references_come_from_the_codex_install_when_both_agents_have_the_skill(self):
+        for agent_dir in (".claude", ".codex"):
+            skill_dir = self.home / agent_dir / "skills" / "code-style"
+            (skill_dir / "scripts").mkdir(parents=True)
+            (skill_dir / "scripts" / "ds.py").write_text(STUB_STYLE_ANSWER)
+        env = dict(os.environ, HOME=str(self.home))
+        env.pop("DEVSKILLS_CODE_STYLE_DS", None)
+        env.pop("SKILL_GATE", None)
+        payload = {"session_id": "c9", "cwd": str(self.repo), "hook_event_name": "PreToolUse", "tool_name": "apply_patch",
+                   "tool_input": {"command": apply_patch_command("*** Update File: api/billing/views.py\n@@\n-a\n+b\n")}}
+        completed = subprocess.run([sys.executable, str(GATE), "codex-style"], input=json.dumps(payload),
+                                   capture_output=True, text=True, env=env, check=False, timeout=60)
+        context = json.loads(completed.stdout)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn(str(self.home / ".codex" / "skills" / "code-style" / "references"), context)
+        self.assertNotIn(str(self.home / ".claude"), context)
+
+    def test_state_lives_under_codex_not_claude(self):
+        self.run_hook("apply_patch", apply_patch_command("*** Add File: api/billing/serializers.py\n+x = 1\n"))
+        self.assertTrue((self.home / ".codex" / "state" / "skill-gate").is_dir())
+        self.assertFalse((self.home / ".claude").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

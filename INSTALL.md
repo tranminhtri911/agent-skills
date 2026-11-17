@@ -17,7 +17,7 @@ python3 agent-skills.py help install
 ## 2. Installation
 
 ```bash
-# Install 17 skills and the routing rule; no third-party UI tool or skill-gate hooks by default
+# Install 17 skills, the routing rule and the skill gate; no third-party UI tool by default
 python3 agent-skills.py install
 # Opt into an exact reviewed UI CLI release (replace X.Y.Z)
 python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z
@@ -73,16 +73,19 @@ python3 -m pip install "pillow==13.0.0" "pypdf==6.21.3"
 Claude only loads skills when it chooses to. The skill gate makes that mandatory with Claude Code hooks:
 a PreToolUse hook denies Edit/Write of code until the routed skills (from the file kind/path) were loaded with the Skill tool; UserPromptSubmit, SubagentStart and post-compaction hooks re-inject the rule; a Stop hook blocks a final report whose "Skills applied" lists skills never loaded.
 
-It is opt-in. Prefer project scope; user scope must be explicitly requested:
+It is installed by default with `install` and `update` for the Claude targets and for `--target codex` (the old `--with-skill-gate` flag is still accepted and does nothing extra). Opt out with `--without-skill-gate`:
 
 ```bash
-python3 agent-skills.py install --target claude-project --with-skill-gate
-python3 agent-skills.py install --target claude-user --with-skill-gate
+python3 agent-skills.py install                                   # skills + rule + gate in ~/.claude
+python3 agent-skills.py install --target claude-project           # gate in this project's .claude/settings.json
+python3 agent-skills.py install --without-skill-gate              # skills and rule only
 python3 tools/skill-gate/install.py --project /path/to/project --dry-run
 python3 tools/skill-gate/install.py --project /path/to/project --uninstall
 ```
 
-An ordinary install/update preserves an already-installed hook but does not add one. Uninstall removes the selected target's gate. `--without-skill-gate` takes precedence. Hook execution/state is Claude-specific and remains independent of the host's dangerous-command approval policy.
+Uninstall removes the selected target's gate. Hook execution/state is independent of the host's dangerous-command approval policy.
+
+**Codex.** `install --target codex` adds one hook to `~/.codex/hooks.json` (your existing hooks are kept, a backup is written) and copies the script to `~/.codex/hooks/`. It runs before `apply_patch` and adds the matching `code-style` references as context; it never blocks, because Codex has no Skill tool to prove a skill was loaded. Codex runs a new hook only after you trust it: open `/hooks` in Codex once.
 
 Existing hooks in `~/.claude/settings.json` are kept; the first install writes a `settings.json.skill-gate-backup-*` copy.
 

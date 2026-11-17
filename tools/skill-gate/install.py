@@ -12,6 +12,10 @@ Does three things, each reversible:
   1. copies skill-gate.py to ~/.claude/hooks/skill-gate.py
   2. merges hooks into ~/.claude/settings.json (existing hooks are kept; a timestamped backup is written)
   3. maintains one marked block in ~/.claude/CLAUDE.md
+
+For Codex (`agent-skills.py install --target codex`) apply_codex() copies the script to ~/.codex/hooks/ and merges
+one PreToolUse hook on apply_patch into ~/.codex/hooks.json. It only adds style context; Codex has no Skill tool
+to enforce loading, so nothing is blocked there.
 """
 import argparse
 import json
@@ -62,14 +66,21 @@ def strip_ours(groups):
     return out
 
 
-def merge_settings(data, install, hook_path):
+def codex_hook_entries(hook_path):
+    """The one Codex hook group: style context after apply_patch is about to run."""
+    command = "python3 " + shlex.quote(hook_path) + " codex-style"
+    hook = {"type": "command", "command": command, "timeout": 30, "statusMessage": "Looking up code style"}
+    return {"PreToolUse": [{"matcher": "^apply_patch$", "hooks": [hook]}]}
+
+
+def merge_settings(data, install, hook_path, entries=None):
     hooks = data.setdefault("hooks", {})
     for event in list(hooks):
         hooks[event] = strip_ours(hooks[event])
         if not hooks[event]:
             del hooks[event]
     if install:
-        for event, groups in hook_entries(hook_path).items():
+        for event, groups in (entries or hook_entries(hook_path)).items():
             hooks.setdefault(event, []).extend(groups)
     if not hooks:
         del data["hooks"]
@@ -141,6 +152,54 @@ def apply(install=True, dry_run=False, claude_dir=None, log=print):
     log(f"  skill gate: {state}{'  (dry run)' if dry_run else ''}")
     if install and not dry_run:
         log("    open /hooks once (or restart Claude Code) so running sessions reload the hooks; "
+            "escape hatch: SKILL_GATE=off")
+
+
+def apply_codex(install=True, dry_run=False, codex_dir=None, log=print):
+    """Install (or remove) the Codex style hook under `codex_dir` (default ~/.codex); idempotent.
+
+    Raises RuntimeError when hooks.json is not valid JSON; nothing is changed in that case. Codex runs a new or
+    changed hook only after the user has trusted it in /hooks, so this never writes a trust record itself.
+    """
+    codex_dir = codex_dir or os.path.expanduser("~/.codex")
+    hook_dst = os.path.join(codex_dir, "hooks", "skill-gate.py")
+    hooks_path = os.path.join(codex_dir, "hooks.json")
+
+    try:
+        with open(hooks_path, encoding="utf-8") as fh:
+            raw = fh.read()
+        data = json.loads(raw)
+    except FileNotFoundError:
+        raw, data = "", {}
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"{hooks_path} is not valid JSON ({exc}); fix it first, nothing changed") from exc
+
+    if raw and MARKER not in raw and install and not dry_run:
+        backup = f"{hooks_path}.skill-gate-backup-{time.strftime('%Y%m%dT%H%M%S')}"
+        shutil.copy2(hooks_path, backup)
+        log(f"  skill gate (codex): backup {backup}")
+
+    if install:
+        if dry_run:
+            log(f"  skill gate (codex): would copy skill-gate.py -> {hook_dst}  (dry run)")
+        else:
+            os.makedirs(os.path.dirname(hook_dst), exist_ok=True)
+            shutil.copy2(os.path.join(HERE, "skill-gate.py"), hook_dst)
+            os.chmod(hook_dst, 0o755)
+    elif os.path.exists(hook_dst) and not dry_run:
+        os.remove(hook_dst)
+
+    updated = json.dumps(merge_settings(data, install, hook_dst, codex_hook_entries(hook_dst)),
+                         indent=2, ensure_ascii=False) + "\n"
+    # Uninstall with no hooks.json leaves the file absent instead of creating an empty one.
+    has_hooks_file_or_installs = bool(raw) or install
+    if has_hooks_file_or_installs and updated != raw:
+        write(hooks_path, updated, dry_run, log)
+
+    state = "installed" if install else "removed"
+    log(f"  skill gate (codex): {state}{'  (dry run)' if dry_run else ''}")
+    if install and not dry_run:
+        log("    Codex runs a new or changed hook only after you trust it: open /hooks in Codex once; "
             "escape hatch: SKILL_GATE=off")
 
 

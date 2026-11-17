@@ -74,7 +74,7 @@ The suite **never runs `codegraph init`/`index` automatically**: creating the in
 
 ## Optional UI reference: ui-ux-pro-max
 
-Default install/update performs no third-party UI installation and adds no skill-gate hooks. To install the UI reference, first review the CLI release and its npm provenance, then supply its exact version:
+Default install/update performs no third-party UI installation. To install the UI reference, first review the CLI release and its npm provenance, then supply its exact version:
 
 ```bash
 python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z
@@ -82,13 +82,7 @@ python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z
 
 `X.Y.Z` is a placeholder for the reviewed release, not a shipped pin. The installer accepts numeric releases only and uses `https://registry.npmjs.org`; it does not verify package provenance itself or pin transitive dependencies. Existing copies require explicit `--force` and are backed up. No package was downloaded to validate this change. `--without-ui-ux-pro-max` remains compatible. CodeGraph remains separately opt-in via `--with-codegraph`.
 
-Skill gate is Claude-specific and separately opt-in. Prefer project scope:
-
-```bash
-python3 agent-skills.py install --target claude-project --with-skill-gate
-```
-
-Shared rules and self-contained skills still support Codex/other agents without Claude hooks. See [checklist audit](docs/checklist-audit.md) for verified fixes and remaining proposals.
+The skill gate is installed by default (`--without-skill-gate` opts out): enforcing hooks for Claude Code, and for `--target codex` one non-blocking hook that adds the code-style references. Other agents use the shared rules and self-contained skills without hooks. See [checklist audit](docs/checklist-audit.md) for verified fixes and remaining proposals.
 
 ## Skills
 

@@ -898,6 +898,7 @@ Unit tests cover domains/edges; integration tests necessary real boundaries; con
 - **TEST-010 MUST:** Unexecuted required tests are blocked/not_run; collection failures/no tests are not passes.
 - **TEST-011 SHOULD:** Use repo runners; Python helpers orchestrate/normalize reports.
 - **TEST-012 MUST:** Record baseline failures separately; do not blame all old failures on new changes or excuse new regressions because baseline is red.
+- **TEST-013 MUST:** When analyzing, adding, fixing or refactoring business behavior, derive the test scenarios from the applicable requirements, existing callers, validation, stored data and observed behavior. Identify which source defines the expected outcome and report conflicts or unknowns. Review realistic normal, boundary, invalid, failure and recovery paths, existing data, and combinations of constraints where applicable. Verify assumptions the change relies on at the actual entry point or integration boundary. Before handover, map applicable scenarios to observable expected outcomes and evidence, mark missing execution explicitly, and explain material exclusions. Scale this review to the change.
 
 Pytest markers classify/select tests; strict markers catch misspellings. Metadata is not a sandbox: `@pytest.mark.safe` cannot block networking/effects. [S33]
 

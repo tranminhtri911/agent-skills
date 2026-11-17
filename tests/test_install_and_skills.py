@@ -6,6 +6,7 @@ import subprocess
 import sys
 import unittest
 
+import devskills
 from devskills.skillcheck import FrontmatterError, parse_frontmatter, validate_skill
 from tests._support import REPO_ROOT, make_temp_dir, run_cli, write
 
@@ -28,7 +29,7 @@ class SkillPackageTest(unittest.TestCase):
     def test_shim_runs_from_the_source_tree(self):
         shim = REPO_ROOT / "skills" / "dev-orchestrate" / "scripts" / "ds.py"
         completed = subprocess.run([sys.executable, str(shim), "--version"], capture_output=True, text=True, check=False)
-        self.assertEqual(completed.stdout.strip(), "devskills 1.0.0", completed.stderr)
+        self.assertEqual(completed.stdout.strip(), f"devskills {devskills.__version__}", completed.stderr)
 
     def test_frontmatter_parser(self):
         fields, body, _ = parse_frontmatter('---\nname: x\ndescription: "Use when: quoted"\nmetadata:\n  version: "1"\n---\nBody\n')
@@ -265,6 +266,68 @@ class InstallerTest(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertEqual(gate_commands(json.loads(settings_path.read_text())), [], "project installs never touch user hooks")
 
+    def test_codex_gets_the_style_hook_by_default_next_to_its_existing_hooks(self):
+        home = make_temp_dir(self)
+        other_hook = {"type": "command", "command": "graphify hook-check"}
+        hooks_path = write(home, ".codex/hooks.json", json.dumps({
+            "hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [other_hook]}]}}))
+        env = dict(os.environ, HOME=str(home), DEVSKILLS_BACKUP_DIR=str(self.backups))
+
+        def run(*args):
+            extra = ["--without-ui-ux-pro-max"] if args[0] in ("install", "update") else []
+            return subprocess.run([sys.executable, str(INSTALLER), *args, "--target", "codex", *extra],
+                                  capture_output=True, text=True, env=env, check=False, timeout=300)
+
+        def gate_groups():
+            data = json.loads(hooks_path.read_text())
+            return [(group.get("matcher"), hook["command"]) for groups in data["hooks"].values() for group in groups
+                    for hook in group["hooks"] if "skill-gate.py" in hook["command"]]
+
+        before = hooks_path.read_text()
+        dry = run("install", "--skills", "dev-orchestrate", "--dry-run")
+        self.assertIn("skill gate:", dry.stdout)
+        self.assertEqual(hooks_path.read_text(), before, "a dry run writes nothing")
+
+        first = run("install", "--skills", "dev-orchestrate")
+        self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+        groups = gate_groups()
+        self.assertEqual(len(groups), 1, "one hook: the style hint on apply_patch")
+        self.assertEqual(groups[0][0], "^apply_patch$")
+        self.assertTrue(groups[0][1].endswith(" codex-style"), groups[0][1])
+        self.assertIn(other_hook, json.loads(hooks_path.read_text())["hooks"]["PreToolUse"][0]["hooks"])
+        self.assertTrue((home / ".codex" / "hooks" / "skill-gate.py").is_file())
+        self.assertFalse((home / ".claude").exists(), "Codex installs never touch Claude settings")
+        self.assertIn("/hooks", first.stdout, "Codex asks the user to trust a new hook")
+
+        run("update", "--skills", "dev-orchestrate")
+        self.assertEqual(len(gate_groups()), 1, "installing or updating again does not duplicate the hook")
+
+        removed = run("uninstall", "--skills", "dev-orchestrate")
+        self.assertEqual(removed.returncode, 0, removed.stdout + removed.stderr)
+        self.assertEqual(gate_groups(), [])
+        self.assertIn(other_hook, json.loads(hooks_path.read_text())["hooks"]["PreToolUse"][0]["hooks"])
+
+        opted_out = run("install", "--skills", "dev-orchestrate", "--without-skill-gate")
+        self.assertEqual(opted_out.returncode, 0, opted_out.stdout + opted_out.stderr)
+        self.assertEqual(gate_groups(), [], "--without-skill-gate leaves the hooks alone")
+
+    def test_claude_gets_the_gate_by_default_and_can_opt_out(self):
+        home = make_temp_dir(self)
+        env = dict(os.environ, HOME=str(home), DEVSKILLS_BACKUP_DIR=str(self.backups))
+
+        def run(*extra):
+            return subprocess.run([sys.executable, str(INSTALLER), "install", "--skills", "dev-orchestrate",
+                                   "--target", "claude-user", "--without-ui-ux-pro-max", *extra],
+                                  capture_output=True, text=True, env=env, check=False, timeout=300)
+
+        opted_out = run("--without-skill-gate")
+        self.assertEqual(opted_out.returncode, 0, opted_out.stdout + opted_out.stderr)
+        self.assertFalse((home / ".claude" / "hooks").exists())
+        plain = run()
+        self.assertEqual(plain.returncode, 0, plain.stdout + plain.stderr)
+        self.assertTrue((home / ".claude" / "hooks" / "skill-gate.py").is_file(), "no flag needed any more")
+        self.assertIn("skill-gate.py", (home / ".claude" / "settings.json").read_text())
+
     def test_skill_gate_refuses_invalid_settings_without_changing_anything(self):
         home = make_temp_dir(self)
         broken = write(home, ".claude/settings.json", "{not json")
@@ -308,10 +371,10 @@ class InstallerTest(unittest.TestCase):
         skill = self.target / "dev-orchestrate"
         self.assertTrue((skill / "scripts" / "_runtime" / "devskills" / "cli.py").is_file())
         manifest = json.loads((skill / "scripts" / "_runtime" / "MANIFEST.json").read_text())
-        self.assertEqual(manifest["version"], "1.0.0")
+        self.assertEqual(manifest["version"], devskills.__version__)
         self.assertIn("${CLAUDE_SKILL_DIR}", (skill / "SKILL.md").read_text(), "Claude-style install keeps placeholders")
         version = subprocess.run([sys.executable, "-I", str(skill / "scripts" / "ds.py"), "--version"], capture_output=True, text=True, check=False)
-        self.assertEqual(version.stdout.strip(), "devskills 1.0.0", "the vendored runtime works in isolated mode")
+        self.assertEqual(version.stdout.strip(), f"devskills {devskills.__version__}", "the vendored runtime works in isolated mode")
         doctor = subprocess.run([sys.executable, str(skill / "scripts" / "ds.py"), "doctor", "--json"], capture_output=True, text=True, check=False)
         self.assertEqual(json.loads(doctor.stdout)["runtime"]["integrity"], "ok")
 
@@ -420,6 +483,20 @@ class InstallerTest(unittest.TestCase):
         completed = self.installer("guard", "--settings", str(settings))
         self.assertEqual(completed.returncode, 2)
         self.assertEqual(settings.read_text(), "{ broken")
+
+
+class SuiteVersionTest(unittest.TestCase):
+    """Every released change bumps one suite version (1.0.0 -> 1.0.1); all copies of it must agree."""
+
+    def test_package_runtime_skills_and_changelog_share_one_version(self):
+        version = devskills.__version__
+        pyproject = (REPO_ROOT / "pyproject.toml").read_text()
+        self.assertIn(f'version = "{version}"', pyproject, "pyproject.toml and src/devskills/__init__.py differ")
+        for skill_md in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
+            fields, _, _ = parse_frontmatter(skill_md.read_text())
+            self.assertEqual(fields["metadata"]["version"], version, f"{skill_md.parent.name}: metadata.version")
+        changelog = (REPO_ROOT / "CHANGELOG.md").read_text()
+        self.assertRegex(changelog, rf"(?m)^## {version.replace('.', '[.]')}\b", "CHANGELOG.md needs a section for this version")
 
 
 if __name__ == "__main__":

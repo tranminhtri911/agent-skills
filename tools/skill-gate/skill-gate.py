@@ -91,13 +91,17 @@ PROMPT_AREAS = {
         "khoa chinh", "foreign key", "transaction", "lock", "deadlock", "ban ghi", "record", "delete",
         "xoa du lieu", "xoa ban ghi", "backup", "restore", "sao luu", "khoi phuc", "room", "prisma", "orm",
         "crud", "sqlite", "postgres", "mysql", "mongodb", "redis", "luu tru", "storage",
+        "khoa ban ghi", "toan ven du lieu", "chi muc", "phan trang du lieu", "connection pool",
+        "rollback", "upsert", "soft delete", "nang cap schema",
     ],
     "design-api": [
         "api", "endpoint", "webhook", "rest", "graphql", "openapi", "swagger", "route", "status code", "idempotent", "idempotency", "phan trang", "pagination",
+        "request body", "response body", "http header", "ma loi", "hop dong api", "gui trung",
     ],
     "implement-backend": [
         "api", "backend", "back end", "server", "may chu", "service", "job", "batch", "cron", "scheduler",
         "worker", "upload", "tai len", "xu ly nen", "background", "chay ngam", "dong bo", "sync",
+        "nghiep vu", "business logic", "controller", "handler", "middleware", "hangfire", "celery",
     ],
     "implement-frontend": [
         "re:trang(?!\\s+thai)", "setting", "cai dat", "dieu khoan", "gioi thieu", "noi dung", "app", "ung dung",
@@ -106,6 +110,8 @@ PROMPT_AREAS = {
         "nut", "button", "layout", "responsive", "dark mode", "theme", "css", "mobile", "android", "ios",
         "compose", "swiftui", "react", "nextjs", "next js", "vue", "widget", "lockscreen", "man hinh khoa",
         "hien thi", "menu", "dialog", "popup", "tab", "icon", "font", "mau sac", "animation", "web",
+        "vo layout", "vo giao dien", "xuong dong", "tran chu", "can le", "khoang cach", "co chu",
+        "loading state", "empty state", "error state", "accessibility", "a11y", "tablet", "tailwind",
     ],
     "design-reliability": [
         "re:google\\s+driv\\w*", "drive", "backup", "sao luu", "khoi phuc", "restore", "upload", "tai len",
@@ -113,35 +119,46 @@ PROMPT_AREAS = {
         "thanh toan", "payment", "email", "sms", "push", "notification", "thong bao", "nhac nho", "reminder",
         "google drive", "firebase", "external", "ben thu ba", "third party", "goi api", "ket noi",
         "mat ket noi", "offline", "dong bo", "sync", "chay hai lan", "trung lap", "duplicate",
+        "gui trung", "chay trung", "mat mang", "dut ket noi", "thu lai tu dong", "circuit breaker",
+        "partial failure", "compensation", "dead letter",
     ],
     "review-security": [
         "bao mat", "security", "dang nhap", "login", "logout", "dang ky", "signup", "auth", "token", "mat khau",
         "password", "phan quyen", "quyen", "permission", "role", "phien dang nhap", "session token", "cookie", "cors", "xss",
         "injection", "secret", "api key", "ma hoa", "encrypt", "du lieu ca nhan", "privacy", "oauth", "jwt",
+        "xac thuc", "xac quyen", "kiem soat truy cap", "authorization", "authentication", "csrf",
+        "ssrf", "rate limit", "multi tenant", "multi-tenant", "tenant isolation", "path traversal",
     ],
     "review-performance": [
         "cham", "slow", "hieu nang", "performance", "toi uu", "optimize", "memory", "bo nho", "leak",
         "cache", "n+1", "thread", "async", "lag", "giat", "treo", "hang", "cpu", "tai nhanh",
+        "ro ri bo nho", "ton bo nho", "qua tai", "nghen", "thread pool", "connection pool",
+        "latency", "throughput", "bottleneck", "profiling",
     ],
     "test-safely": [
         "test", "kiem thu", "e2e", "unit test", "playwright", "tdd", "mock", "seed", "chay test",
         "viet test", "regression", "fixture",
+        "kiem chung", "tai hien", "reproduce", "repro", "smoke test", "integration test", "snapshot test",
     ],
     "design-change": [
         "thiet ke", "design", "de xuat", "proposal", "phuong an", "kha thi", "feasibility", "ke hoach", "plan",
         "spec", "dac ta", "estimate", "uoc luong", "kien truc", "architecture", "refactor", "adr", "backlog",
         "ticket", "danh gia anh huong", "impact", "tac dong", "anh huong",
+        "chia task", "giai phap", "tradeoff", "trade-off", "decision memo", "technical proposal",
     ],
     "review-code": [
         "review", "ra soat", "pull request", "merge request", "diff", "commit", "truoc khi merge",
+        "tu review", "kiem tra code", "code review", "truoc khi ban giao",
     ],
     "index-project-knowledge": [
         # Project documents, not product features ("tạo pdf" is a feature): only words that name the docs.
         "tai lieu", "docs", "specs", "requirement", "yeu cau du an", "dac ta yeu cau", "file thiet ke",
+        "knowledge index", "index tai lieu", "tai lieu du an", "file excel", "file word", "file pdf",
     ],
     "design-infrastructure": [
         "terraform", "aws", "gcp", "vpc", "subnet", "iam", "rds", "ec2", "kubernetes", "k8s", "cloudformation",
         "ha tang", "infrastructure", "cloud sql",
+        "security group", "cloud run", "cloudformation", "pulumi", "bucket", "ecs", "gke",
     ],
 }
 # Verbs that make a prompt a piece of work (not a question about something). Without one the
@@ -157,6 +174,7 @@ WORK_WORDS = [
     # Requests phrased as wishes or needs ("nên có", "cần", "muốn", "giúp") are work too.
     # Not "can"/"nen" alone: "ko cần" (no need) and "nên không" are questions, not requests.
     "nen co", "nen them", "can them", "can sua", "muon", "giup", "yeu cau", "chinh sua", "hien thi",
+    "kiem chung", "tai hien", "reproduce", "repro",
 ]
 # Phrases removed before matching because a keyword inside them means something else
 # ("chính sách bảo mật" is a privacy-policy page, not security work).
@@ -472,13 +490,17 @@ STYLE_HINT_TIMEOUT_SECONDS = 8
 EDIT_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
 
 
+AGENT_HOME_DIRS = (".claude", ".codex", ".agents")  # where an installed code-style skill is looked up, in order
+
+
 def code_style_ds(cwd):
-    """The code-style skill's ds.py: explicit override, project install, then user install; None when absent."""
+    """The code-style skill's ds.py: explicit override, project install, then user installs; None when absent."""
     candidates = [
         os.environ.get(CODE_STYLE_DS_ENV) or "",
         os.path.join(cwd or "", ".claude", "skills", "code-style", "scripts", "ds.py") if cwd else "",
-        os.path.join(HOME, ".claude", "skills", "code-style", "scripts", "ds.py"),
     ]
+    for agent_dir in AGENT_HOME_DIRS:
+        candidates.append(os.path.join(HOME, agent_dir, "skills", "code-style", "scripts", "ds.py"))
     for candidate in candidates:
         if candidate and os.path.isfile(candidate):
             return candidate
@@ -524,6 +546,40 @@ def style_hint(p, path, st):
     if result.get("style_tools"):
         text += " The repository's own style tools win where they differ: %s." % ", ".join(result["style_tools"])
     return text
+
+
+# --------------------------------------------------------------------------- Codex
+# Codex edits files with apply_patch, whose tool_input.command is the patch text. Codex has no Skill tool and
+# its transcript format is not a stable interface, so nothing is enforced there: the hook only adds the style
+# references, as non-blocking context, the first time a (root, language) is patched in a session.
+CODEX_STATE_DIR = os.path.join(HOME, ".codex", "state", "skill-gate")
+PATCH_FILE_RE = re.compile(r"^\*\*\* (?:Add File|Update File|Move to): (.+?)\s*$", re.M)
+
+
+def patch_paths(command):
+    """Files an apply_patch command writes: added, updated and the destination of a move; deletions are ignored."""
+    return dedupe(PATCH_FILE_RE.findall(command or ""))
+
+
+def cmd_codex_style(p):
+    global STATE_DIR, AGENT_HOME_DIRS
+    STATE_DIR = CODEX_STATE_DIR  # Codex sessions keep their own state, apart from Claude Code's.
+    AGENT_HOME_DIRS = (".codex", ".agents", ".claude")  # and prefer the skill installed for Codex.
+    if p.get("tool_name") != "apply_patch":
+        return
+    working_directory = p.get("cwd") or os.getcwd()
+    st = load_state(p.get("session_id") or "")
+    hints = []
+    for patched_path in patch_paths((p.get("tool_input") or {}).get("command")):
+        path = patched_path if os.path.isabs(patched_path) else os.path.join(working_directory, patched_path)
+        lowered_path = path.lower()
+        if any(part in lowered_path for part in SKIP_PARTS) or os.path.splitext(lowered_path)[1] not in CODE_EXT:
+            continue
+        hint = style_hint(p, path, st)
+        if hint:
+            hints.append(hint)
+    if hints:
+        emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "\n".join(hints)}})
 
 
 def deny(reason):
@@ -632,7 +688,7 @@ def main():
     p = read_payload()
     try:
         {"prompt": cmd_prompt, "gate": cmd_gate, "subagent": cmd_subagent,
-         "compact": cmd_compact, "stop": cmd_stop}.get(sys.argv[1], lambda _p: None)(p)
+         "compact": cmd_compact, "stop": cmd_stop, "codex-style": cmd_codex_style}.get(sys.argv[1], lambda _p: None)(p)
     except SystemExit:
         raise
     except Exception:

@@ -5,7 +5,7 @@
                                      [--with-venv [PATH]] [--extras ui,imaging,pdf,contracts|none]
                                      [--with-codegraph] [--with-ui-ux-pro-max --ui-ux-version X.Y.Z]   # opt-in UI tool
                                      [--without-agent-rules]   # skip the always-loaded rule in CLAUDE.md/AGENTS.md
-                                     [--with-skill-gate]       # opt-in Claude Code hooks
+                                     [--without-skill-gate]    # skip the skill-gate hooks (on by default)
     python3 agent-skills.py status   [--target ...]       # installed vs source, local edits, optional tools
     python3 agent-skills.py update   [--target ...] [--force] [--with-codegraph] [--without-ui-ux-pro-max]
     python3 agent-skills.py rollback [--target ...] [--backup TIMESTAMP]
@@ -22,10 +22,11 @@ Skills load only when the agent decides a description matches, so install/update
 also write a short always-loaded rule (tools/agent-rules.md) into the target's
 instruction file (~/.claude/CLAUDE.md, <project>/CLAUDE.md, ~/.codex/AGENTS.md)
 between devskills markers; uninstall removes it. --without-agent-rules skips it.
-A rule is only advice, so install/update can optionally add the skill gate (--with-skill-gate)
-(tools/skill-gate): Claude Code hooks that deny code edits until the routed skills were loaded
-with the Skill tool and block a "Skills applied" list that names skills never loaded.
-uninstall removes it; the default never adds hooks.
+A rule is only advice, so install/update also add the skill gate (tools/skill-gate; --without-skill-gate
+skips it). Claude targets get hooks that deny code edits until the routed skills were loaded with the Skill
+tool and block a "Skills applied" list that names skills never loaded; the codex target gets one
+non-blocking hook in ~/.codex/hooks.json that adds the code-style references when apply_patch edits code
+(Codex asks you to trust it once in /hooks). uninstall removes it.
 
 The runtime itself needs only the standard library, so no virtualenv is required.
 Optionally, `--with-venv` gives the skills their own virtualenv (~/.devskills/venv):
@@ -425,10 +426,10 @@ def apply_skill_gate(args: argparse.Namespace, remove: bool = False) -> bool:
     """Install (or remove) the skill-gate hooks in ~/.claude; returns False when that failed.
 
     The hooks force Claude Code to load dev-orchestrate and the routed domain skills before it edits
-    code (tools/skill-gate). They are Claude Code settings scoped to the chosen user/project, so only Claude targets
-    gets them; agents, codex and --target-dir are left untouched.
+    code (tools/skill-gate). They are Claude Code settings scoped to the chosen user/project. The codex target
+    gets one non-blocking style hook in ~/.codex/hooks.json; agents and --target-dir are left untouched.
     """
-    if args.target not in CLAUDE_TARGETS or args.target_dir:
+    if args.target not in CLAUDE_TARGETS | {"codex"} or args.target_dir:
         return True
     spec = importlib.util.spec_from_file_location("skill_gate_install", SKILL_GATE_INSTALLER)
     if spec is None or spec.loader is None:
@@ -437,6 +438,9 @@ def apply_skill_gate(args: argparse.Namespace, remove: bool = False) -> bool:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     try:
+        if args.target == "codex":
+            module.apply_codex(install=not remove, dry_run=args.dry_run, codex_dir=str(Path.home() / ".codex"))
+            return True
         gate_dir = (Path(args.project or os.getcwd()).resolve() / ".claude"
                     if args.target == "claude-project" else Path.home() / ".claude")
         module.apply(install=not remove, dry_run=args.dry_run, claude_dir=str(gate_dir))
@@ -532,8 +536,9 @@ def install_or_update(args: argparse.Namespace, update_only: bool) -> int:
     # The rule points at dev-orchestrate, so it is written only when that skill is part of this install.
     if not args.without_agent_rules and "dev-orchestrate" in names:
         apply_agent_rules(args)
-    # Same condition as the rule: the gate's routing is dev-orchestrate's, so it needs that skill installed.
-    if args.with_skill_gate and not args.without_skill_gate and "dev-orchestrate" in names and not apply_skill_gate(args):
+    # On by default (--without-skill-gate opts out). Same condition as the rule: the gate's routing is
+    # dev-orchestrate's, so it needs that skill installed.
+    if not args.without_skill_gate and "dev-orchestrate" in names and not apply_skill_gate(args):
         problems += 1
     with_uiux = args.with_ui_ux_pro_max and not args.without_ui_ux_pro_max
     if args.with_codegraph or with_uiux:
@@ -825,7 +830,7 @@ def cmd_guard(args: argparse.Namespace) -> int:
 
 # (summary, examples) per command, shown by `--help`, `<command> --help` and `help [command]`.
 COMMAND_HELP = {
-    "install": ("install the skills (UI reference, skill gate, venv and CodeGraph are opt-in)", """\
+    "install": ("install the skills and the skill gate (UI reference, venv and CodeGraph are opt-in)", """\
 examples:
   python3 agent-skills.py install                                   # all 17 skills into ~/.claude/skills
   python3 agent-skills.py install --dry-run                         # show what would happen, change nothing
@@ -835,7 +840,7 @@ examples:
   python3 agent-skills.py install --with-codegraph                  # also CodeGraph, latest release
   python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z  # reviewed UI CLI release
   python3 agent-skills.py install --without-agent-rules             # do not add the devskills rule to CLAUDE.md
-  python3 agent-skills.py install --target claude-project --with-skill-gate  # optional project hooks
+  python3 agent-skills.py install --without-skill-gate               # skills and rule only, no hooks
   python3 agent-skills.py install --link                            # developers: symlink to this checkout"""),
     "update": ("update installed skills from this checkout (backup first); third-party tools are opt-in", """\
 examples:
@@ -908,12 +913,12 @@ def build_parser() -> argparse.ArgumentParser:
                              help="opt in to installing the UI reference from npm; requires --ui-ux-version")
             sub.add_argument("--ui-ux-version", help="exact reviewed UI CLI release X.Y.Z; never resolves latest")
             sub.add_argument("--with-skill-gate", action="store_true",
-                             help="opt in to Claude hooks for the selected user or project target")
+                             help="accepted for old scripts: the skill gate is installed by default")
             sub.add_argument("--without-ui-ux-pro-max", action="store_true", help=f"do not install or refresh {UIUX_SKILL}")
             sub.add_argument("--without-agent-rules", action="store_true",
                              help="do not write the always-loaded devskills rule into CLAUDE.md / AGENTS.md")
             sub.add_argument("--without-skill-gate", action="store_true",
-                             help="do not install the Claude Code hooks that force skills to be loaded (claude-user target only)")
+                             help="do not install the skill-gate hooks (Claude Code: force skills to be loaded; Codex: style hint)")
         if name == "uninstall":
             sub.add_argument("--remove-venv", action="store_true", help="also delete the skills' virtualenv")
             sub.add_argument("--venv", default=str(DEFAULT_VENV), help="virtualenv to delete with --remove-venv")

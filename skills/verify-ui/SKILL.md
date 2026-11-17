@@ -2,7 +2,7 @@
 name: verify-ui
 description: "Use when a change affects what users see — taking screenshots, comparing against visual baselines, checking responsive layouts on mobile, tablet and laptop or iOS/Android app screens, loading/error/empty states, console errors or accessibility of a page or component. Triggers (vi): chụp màn hình, so sánh giao diện, kiểm tra UI trên mobile/tablet/laptop, vỡ layout, xuống dòng, lỗi hiển thị. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   suite: devskills
 ---
 

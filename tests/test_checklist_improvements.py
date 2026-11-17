@@ -20,13 +20,14 @@ def load_tool(name):
 
 
 class ChecklistRegressionTest(unittest.TestCase):
-    def test_default_install_never_calls_third_party_or_writes_hooks(self):
+    def test_install_without_the_gate_never_calls_third_party_or_writes_hooks(self):
         home = make_temp_dir(self)
         env = dict(os.environ, HOME=str(home), DEVSKILLS_BACKUP_DIR=str(home / 'backups'))
-        # Deliberately invalid JSON: a default install must not even parse hook settings.
+        # Deliberately invalid JSON: an install that opts out of the gate must not even parse hook settings.
         settings = write(home, '.claude/settings.json', '{keep untouched')
         completed = subprocess.run([sys.executable, str(REPO_ROOT / 'agent-skills.py'), 'install',
-                                    '--skills', 'dev-orchestrate'], env=env, text=True, capture_output=True)
+                                    '--skills', 'dev-orchestrate', '--without-skill-gate'],
+                                   env=env, text=True, capture_output=True)
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertNotIn('npx', completed.stdout)
         self.assertFalse((home / '.claude/hooks').exists())

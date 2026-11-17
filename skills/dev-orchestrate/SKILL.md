@@ -2,7 +2,7 @@
 name: dev-orchestrate
 description: "Use when working on any development task or ticket for an application (backend, frontend, API, database, jobs, infrastructure), in any language — requirements, impact or feasibility, planning or specifying, implementing a feature, bugfix or refactor, tests, review, commit or reporting results. Triggers (vi): làm task, ticket, thêm chức năng, sửa lỗi, triển khai, phân tích tác động, viết spec, test, review, commit, báo cáo kết quả. Repository-specific questions are in scope; pure conceptual questions do not require the implementation workflow. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   suite: devskills
 ---
 
@@ -81,6 +81,8 @@ Existing user restrictions on AWS, Azure, production, real payments, secrets and
 Risk comes from side effects, not diff size. Get a suggestion with `DS risk`; you may raise it, and lowering it needs a written reason.
 
 ## Bugs and refactors
+
+- For analysis, features, fixes and refactors that affect business behavior, load test-safely during scoping. Apply TEST-013 before proposing or editing the behavior and recheck the scenarios before closing. Analysis-only work may leave scenarios unexecuted. Label source inferences and runtime results separately, and run focused safe probes when needed to support material claims.
 
 - Maintenance/update of existing logic: preserve behavior outside the requested change. Pin the old commit plus working-tree snapshot, trace actual old code/callers, and list preserved cases versus authorized differences (CHG-004/005, write-maintainable-code `references/changing-existing-code.md`). Specs are supporting evidence; discrepancies with old code must be reported, not silently corrected. Add `preservation` acceptance criteria with a separate baseline run; `trace` cannot verify them from current-only passes.
 - Bug: reproduce → trace the flow → test hypotheses → fix the root cause → regression test: [debugging-workflow.md](references/debugging-workflow.md).

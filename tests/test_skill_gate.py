@@ -79,6 +79,36 @@ class PromptRoutingTest(unittest.TestCase):
         self.assertFalse([s for s in needs("sửa lỗi crash khi lưu dữ liệu", superpowers=False) if s.startswith(SP)])
         self.assertIn(SP + "systematic-debugging", needs("sửa lỗi crash khi lưu dữ liệu", superpowers=True))
 
+    def test_additional_domain_phrases_match_with_and_without_accents(self):
+        cases = [
+            ("sửa khóa bản ghi", "change-database"),
+            ("sửa response body", "design-api"),
+            ("sửa nghiệp vụ", "implement-backend"),
+            ("sửa vỡ layout và xuống dòng", "implement-frontend"),
+            ("sửa gửi trùng khi mất mạng", "design-reliability"),
+            ("thêm xác thực", "review-security"),
+            ("sửa rò rỉ bộ nhớ", "review-performance"),
+            ("tái hiện lỗi", "test-safely"),
+            ("đề xuất giải pháp", "design-change"),
+            ("kiểm tra code trước khi bàn giao", "review-code"),
+            ("cập nhật knowledge index", "index-project-knowledge"),
+            ("sửa security group", "design-infrastructure"),
+        ]
+        for prompt, skill in cases:
+            with self.subTest(prompt=prompt):
+                route = skill_gate.route_prompt(prompt)
+                self.assertIn(skill, route["areas"])
+                self.assertTrue(route["work"])
+                self.assertEqual(route, skill_gate.route_prompt(skill_gate.fold(prompt)))
+
+    def test_new_phrases_keep_word_boundaries_and_question_handling(self):
+        for prompt in ("sửa rebucketed", "sửa controllerish", "sửa reprojection"):
+            with self.subTest(prompt=prompt):
+                self.assertEqual(skill_gate.route_prompt(prompt)["areas"], [])
+        for prompt in ("response body là gì?", "knowledge index để làm gì?", "xác thực là gì?"):
+            with self.subTest(prompt=prompt):
+                self.assertFalse(skill_gate.route_prompt(prompt)["work"])
+
 
 class EditAndCommandRoutingTest(unittest.TestCase):
     def test_a_code_edit_needs_the_base_skills_plus_what_the_request_touches(self):
