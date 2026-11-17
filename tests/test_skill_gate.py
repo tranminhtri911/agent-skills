@@ -14,7 +14,7 @@ spec = importlib.util.spec_from_file_location("skill_gate", GATE)
 skill_gate = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(skill_gate)
 
-BASE = ["dev-orchestrate", "discover-codebase", "write-maintainable-code"]
+BASE = ["dev-orchestrate", "discover-codebase", "write-maintainable-code", "code-style"]
 SP = "superpowers:"
 
 
@@ -56,6 +56,21 @@ class PromptRoutingTest(unittest.TestCase):
     def test_questions_and_chat_require_nothing(self):
         for prompt in ("vì sao claude dùng ít skills vậy", "ok bỏ đi", "cùng 1 session thì ko cần đúng ko"):
             self.assertEqual(needs(prompt), [], prompt)
+
+    PASTED_CHECKLIST = (
+        '<pasted_content id="b419">\nChecklist: sửa chính sách Foreign Key trong database, bổ sung sandbox '
+        'bảo mật, viết test cho Terraform, React, thanh toán; hãy kiểm tra lỗi sai trước khi thay đổi.\n'
+        '</pasted_content id="b419">'
+    )
+
+    def test_pasted_text_does_not_route_the_users_own_question(self):
+        # A pasted checklist names many areas; the user only asked whether it was done.
+        self.assertEqual(needs("\n\n" + self.PASTED_CHECKLIST + "\n\ncheck xem đã sửa chưa"), [])
+
+    def test_pasted_text_is_routed_when_the_user_wrote_nothing_else(self):
+        required = needs('<pasted_content id="x1">\nthêm API đăng nhập bằng token\n</pasted_content id="x1">')
+        self.assertIn("design-api", required)
+        self.assertIn("review-security", required)
 
     def test_accents_and_typing_without_accents_route_the_same(self):
         self.assertEqual(needs("xóa dữ liệu khách hàng"), needs("xoa du lieu khach hang"))
@@ -148,7 +163,7 @@ class HookEndToEndTest(unittest.TestCase):
         self.assertIsNone(self.hook("stop", stop_hook_active=True), "never blocks twice in a row")
 
         self.load("dev-orchestrate", "discover-codebase", "change-database", "test-safely", "write-maintainable-code",
-                  "review-code", SP + "test-driven-development", SP + "verification-before-completion")
+                  "code-style", "review-code", SP + "test-driven-development", SP + "verification-before-completion")
         self.assertIsNone(self.hook("stop"), "allowed once the request's skills are loaded")
 
     def test_follow_up_without_an_area_keeps_the_previous_request(self):

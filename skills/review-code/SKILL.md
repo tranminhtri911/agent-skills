@@ -1,6 +1,6 @@
 ---
 name: review-code
-description: "Use when reviewing a diff, pull request, merge request, commit, patch or a teammate's or AI-generated change, when asked to review or re-check a task before merge or handover, or when self-reviewing your own change before reporting it done. Triggers (vi): review code, review PR/MR, xem diff, kiểm tra lại trước khi merge, tự review, góp ý review. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when reviewing a diff, pull request, merge request, commit, patch or a teammate's or AI-generated change, when asked to review or re-check a task before merge or handover, or when self-reviewing your own change before reporting it done. Triggers (vi): review code, review PR/MR, xem diff, kiểm tra lại trước khi merge, tự review, góp ý review. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills
@@ -26,7 +26,7 @@ This skill is the method; the rules come from the skill that owns each area of t
 | threads, async, workers, caches, loops over many rows | review-performance | unbounded resources, blocking calls, missing timeouts |
 | external calls, retries, queues, job locks | design-reliability | duplicates, partial failure, unknown outcomes |
 | tests, seeds, fixtures | test-safely | tests that cannot fail, real side effects, mocked DB for DB behavior |
-| names, comments, structure | write-maintainable-code | unclear names, literals instead of enums, over-engineering |
+| names, comments, structure | write-maintainable-code, code-style | unclear names, literals instead of enums, over-engineering, one-line `if`, opaque lambdas, needless `static`, a pattern missing where its signal is present |
 | Terraform, IAM, networks | design-infrastructure | wildcard permissions, public exposure |
 
 ## Procedure

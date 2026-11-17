@@ -3,9 +3,9 @@
 
     python3 agent-skills.py install  [--target claude-user|claude-project|agents|codex] [--skills a,b] [--link]
                                      [--with-venv [PATH]] [--extras ui,imaging,pdf,contracts|none]
-                                     [--with-codegraph] [--without-ui-ux-pro-max]   # tools at their latest release
+                                     [--with-codegraph] [--with-ui-ux-pro-max --ui-ux-version X.Y.Z]   # opt-in UI tool
                                      [--without-agent-rules]   # skip the always-loaded rule in CLAUDE.md/AGENTS.md
-                                     [--without-skill-gate]    # skip the Claude Code hooks that force skill loading
+                                     [--with-skill-gate]       # opt-in Claude Code hooks
     python3 agent-skills.py status   [--target ...]       # installed vs source, local edits, optional tools
     python3 agent-skills.py update   [--target ...] [--force] [--with-codegraph] [--without-ui-ux-pro-max]
     python3 agent-skills.py rollback [--target ...] [--backup TIMESTAMP]
@@ -22,10 +22,10 @@ Skills load only when the agent decides a description matches, so install/update
 also write a short always-loaded rule (tools/agent-rules.md) into the target's
 instruction file (~/.claude/CLAUDE.md, <project>/CLAUDE.md, ~/.codex/AGENTS.md)
 between devskills markers; uninstall removes it. --without-agent-rules skips it.
-A rule is only advice, so for the claude-user target install/update also add the skill gate
+A rule is only advice, so install/update can optionally add the skill gate (--with-skill-gate)
 (tools/skill-gate): Claude Code hooks that deny code edits until the routed skills were loaded
 with the Skill tool and block a "Skills applied" list that names skills never loaded.
-uninstall removes it; --without-skill-gate skips it.
+uninstall removes it; the default never adds hooks.
 
 The runtime itself needs only the standard library, so no virtualenv is required.
 Optionally, `--with-venv` gives the skills their own virtualenv (~/.devskills/venv):
@@ -70,7 +70,7 @@ IGNORED_NAMES = {"__pycache__", ".DS_Store", ".pytest_cache"}
 CLAUDE_TARGETS = {"claude-user", "claude-project"}
 PLACEHOLDER = "${CLAUDE_SKILL_DIR}"
 GUARD_MARKER = "ds.py\" guard"
-# Optional third-party tools, always installed at their latest release when the flag is given.
+# Optional third-party tools require explicit installation.
 CODEGRAPH_PACKAGE = "@colbymchenry/codegraph"
 UIUX_PACKAGE = "ui-ux-pro-max-cli"
 UIUX_SKILL = "ui-ux-pro-max"
@@ -425,10 +425,10 @@ def apply_skill_gate(args: argparse.Namespace, remove: bool = False) -> bool:
     """Install (or remove) the skill-gate hooks in ~/.claude; returns False when that failed.
 
     The hooks force Claude Code to load dev-orchestrate and the routed domain skills before it edits
-    code (tools/skill-gate). They are user-scope Claude Code settings, so only the claude-user target
-    gets them; every other target (project, agents, codex, --target-dir) is left untouched.
+    code (tools/skill-gate). They are Claude Code settings scoped to the chosen user/project, so only Claude targets
+    gets them; agents, codex and --target-dir are left untouched.
     """
-    if args.target != "claude-user" or args.target_dir:
+    if args.target not in CLAUDE_TARGETS or args.target_dir:
         return True
     spec = importlib.util.spec_from_file_location("skill_gate_install", SKILL_GATE_INSTALLER)
     if spec is None or spec.loader is None:
@@ -437,7 +437,9 @@ def apply_skill_gate(args: argparse.Namespace, remove: bool = False) -> bool:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     try:
-        module.apply(install=not remove, dry_run=args.dry_run, claude_dir=str(Path.home() / ".claude"))
+        gate_dir = (Path(args.project or os.getcwd()).resolve() / ".claude"
+                    if args.target == "claude-project" else Path.home() / ".claude")
+        module.apply(install=not remove, dry_run=args.dry_run, claude_dir=str(gate_dir))
     except RuntimeError as exc:
         print(f"  skill gate: {exc}")
         return False
@@ -446,6 +448,9 @@ def apply_skill_gate(args: argparse.Namespace, remove: bool = False) -> bool:
 
 def install_or_update(args: argparse.Namespace, update_only: bool) -> int:
     target_root, keep_placeholders = resolve_target(args)
+    if args.with_ui_ux_pro_max and not args.without_ui_ux_pro_max:
+        if not args.ui_ux_version or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", args.ui_ux_version):
+            raise InstallError("--with-ui-ux-pro-max requires --ui-ux-version X.Y.Z (review that release first)")
     names = selected_skills(args)
     stamp = now_stamp()
     print(f"target: {target_root}{'  (dry run)' if args.dry_run else ''}")
@@ -528,19 +533,15 @@ def install_or_update(args: argparse.Namespace, update_only: bool) -> int:
     if not args.without_agent_rules and "dev-orchestrate" in names:
         apply_agent_rules(args)
     # Same condition as the rule: the gate's routing is dev-orchestrate's, so it needs that skill installed.
-    if not args.without_skill_gate and "dev-orchestrate" in names and not apply_skill_gate(args):
+    if args.with_skill_gate and not args.without_skill_gate and "dev-orchestrate" in names and not apply_skill_gate(args):
         problems += 1
-    with_uiux = not args.without_ui_ux_pro_max
+    with_uiux = args.with_ui_ux_pro_max and not args.without_ui_ux_pro_max
     if args.with_codegraph or with_uiux:
-        print("tools (latest release):")
+        print("tools (explicit opt-in):")
     if args.with_codegraph and not install_codegraph(args.dry_run):
         problems += 1
     if with_uiux and not install_ui_ux_pro_max(args, target_root, stamp):
-        # Installed by default; only an explicit --with-ui-ux-pro-max turns a failure (no npx, offline) into an error.
-        if args.with_ui_ux_pro_max:
-            problems += 1
-        else:
-            print("    skipped: the skills fall back to their own UI checklists (--without-ui-ux-pro-max stops trying)")
+        problems += 1
     return 1 if problems else 0
 
 
@@ -575,7 +576,7 @@ def install_codegraph(dry_run: bool) -> bool:
 
 
 def install_ui_ux_pro_max(args: argparse.Namespace, target_root: Path, stamp: str) -> bool:
-    """Install/refresh the ui-ux-pro-max skill with its own CLI at the latest version (npx …@latest init --force).
+    """Install/refresh the ui-ux-pro-max skill with an explicitly selected CLI release.
 
     An existing copy is backed up first, like our own skills, so `rollback` can restore it.
     """
@@ -588,11 +589,15 @@ def install_ui_ux_pro_max(args: argparse.Namespace, target_root: Path, stamp: st
         return False
     ai_name, is_global = UIUX_TARGETS[args.target]
     existing = target_root / UIUX_SKILL
+    if existing.exists() and not args.force:
+        print("    ui-ux-pro-max already exists; use --force to replace it with a backup")
+        return False
     if existing.exists() and not args.dry_run:
-        backup_skill(existing, target_root, stamp, "replaced by ui-ux-pro-max latest")
-    argv = [npx, "-y", f"{UIUX_PACKAGE}@latest", "init", "--ai", ai_name, "--force", *(["--global"] if is_global else [])]
+        backup_skill(existing, target_root, stamp, "replaced by explicitly selected ui-ux-pro-max release")
+    argv = [npx, "-y", "--registry=https://registry.npmjs.org", f"{UIUX_PACKAGE}@{args.ui_ux_version}",
+            "init", "--ai", ai_name, *(["--force"] if args.force else []), *(["--global"] if is_global else [])]
     # Project installs run from the project root (target_root is <project>/.claude/skills).
-    if not run_tool_install("ui-ux-pro-max (latest)", argv, Path.home() if is_global else target_root.parent.parent, args.dry_run):
+    if not run_tool_install("ui-ux-pro-max (explicit version)", argv, Path.home() if is_global else target_root.parent.parent, args.dry_run):
         return False
     if not args.dry_run and not (existing / "SKILL.md").is_file():
         print(f"    note: uipro placed the skill in its own folder for --ai {ai_name}, not in {target_root}")
@@ -651,7 +656,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         print(f"agent rules (always-loaded, makes agents use dev-orchestrate): {rules_state} in {rules_path}"
               + ("" if rules_state == "up-to-date" else " — `update` writes it"))
     uiux_state = "installed" if (target_root / UIUX_SKILL / "SKILL.md").is_file() else "not installed"
-    print(f"ui-ux-pro-max (UI design reference, installed by default): {uiux_state} — `update` refreshes it to the latest release")
+    print(f"ui-ux-pro-max (UI design reference, opt-in): {uiux_state} — use --with-ui-ux-pro-max --ui-ux-version X.Y.Z")
     return 1 if outdated else 0
 
 
@@ -820,19 +825,19 @@ def cmd_guard(args: argparse.Namespace) -> int:
 
 # (summary, examples) per command, shown by `--help`, `<command> --help` and `help [command]`.
 COMMAND_HELP = {
-    "install": ("install the skills and ui-ux-pro-max (optionally with a venv and CodeGraph)", """\
+    "install": ("install the skills (UI reference, skill gate, venv and CodeGraph are opt-in)", """\
 examples:
-  python3 agent-skills.py install                                   # all 16 skills into ~/.claude/skills
+  python3 agent-skills.py install                                   # all 17 skills into ~/.claude/skills
   python3 agent-skills.py install --dry-run                         # show what would happen, change nothing
   python3 agent-skills.py install --skills dev-orchestrate,test-safely
   python3 agent-skills.py install --target claude-project --project ~/work/shop
   python3 agent-skills.py install --with-venv                       # screenshots, image diff, PDF in ~/.devskills/venv
   python3 agent-skills.py install --with-codegraph                  # also CodeGraph, latest release
-  python3 agent-skills.py install --without-ui-ux-pro-max           # skip the ui-ux-pro-max UI reference skill
+  python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z  # reviewed UI CLI release
   python3 agent-skills.py install --without-agent-rules             # do not add the devskills rule to CLAUDE.md
-  python3 agent-skills.py install --without-skill-gate              # do not install the hooks that force skill loading
+  python3 agent-skills.py install --target claude-project --with-skill-gate  # optional project hooks
   python3 agent-skills.py install --link                            # developers: symlink to this checkout"""),
-    "update": ("update installed skills from this checkout (backup first); ui-ux-pro-max and tools to their latest release", """\
+    "update": ("update installed skills from this checkout (backup first); third-party tools are opt-in", """\
 examples:
   python3 agent-skills.py status                                    # see what is outdated first
   python3 agent-skills.py update
@@ -888,7 +893,7 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--project", help="project root for --target claude-project (default: current directory)")
         sub.add_argument("--target-dir", help="install into this skills directory instead of a named target")
         sub.add_argument("--render-paths", action="store_true", help="with --target-dir: replace ${CLAUDE_SKILL_DIR} with real paths")
-        sub.add_argument("--skills", help="comma-separated subset of skills (default: all 16)")
+        sub.add_argument("--skills", help="comma-separated subset of skills (default: all 17)")
         sub.add_argument("--dry-run", action="store_true", help="print what would be done; change nothing")
         sub.add_argument("--force", action="store_true", help="replace foreign or locally edited skills (backups are kept)")
         if name == "install":
@@ -900,8 +905,10 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--with-codegraph", action="store_true",
                              help=f"optional: npm install -g {CODEGRAPH_PACKAGE}@latest (call graph for inspect; never runs codegraph init)")
             sub.add_argument("--with-ui-ux-pro-max", action="store_true",
-                             help=f"default: the {UIUX_SKILL} UI design reference skill is installed/refreshed via npx "
-                                  f"{UIUX_PACKAGE}@latest (previous copy backed up); this flag makes a failed install an error")
+                             help="opt in to installing the UI reference from npm; requires --ui-ux-version")
+            sub.add_argument("--ui-ux-version", help="exact reviewed UI CLI release X.Y.Z; never resolves latest")
+            sub.add_argument("--with-skill-gate", action="store_true",
+                             help="opt in to Claude hooks for the selected user or project target")
             sub.add_argument("--without-ui-ux-pro-max", action="store_true", help=f"do not install or refresh {UIUX_SKILL}")
             sub.add_argument("--without-agent-rules", action="store_true",
                              help="do not write the always-loaded devskills rule into CLAUDE.md / AGENTS.md")

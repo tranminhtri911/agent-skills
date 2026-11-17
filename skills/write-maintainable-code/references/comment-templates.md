@@ -1,6 +1,6 @@
 # Comment and doc templates per language
 
-Rule of thumb: doc comments describe the **contract** (purpose, inputs and constraints, output, errors, side effects); inline comments explain **why**. Multi-line comments use `/* … */` where the language supports it.
+Rule of thumb: doc comments describe the **contract** (purpose, inputs and constraints, output, errors, side effects); inline comments explain **why**. The templates below are examples: follow the repository's existing comment style (block or line comments), unless `.devskills.toml` `[code].multiline_comment_style` sets one (DOC-003).
 
 ## TypeScript / JavaScript (TSDoc/JSDoc)
 

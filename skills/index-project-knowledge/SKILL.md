@@ -1,6 +1,6 @@
 ---
 name: index-project-knowledge
-description: "Use when a project has documents — docs/, specs/, plans, tickets, README/CLAUDE.md, Word, Excel, PowerPoint, PDF, HTML or CSV files — and no .knowledge/INDEX.md yet, when the index check prints STALE, after adding or changing project documents, or before searching project documents for a task. Triggers (vi): đọc tài liệu dự án, docs, specs, file Excel/Word/PDF/PowerPoint, tìm trong tài liệu, yêu cầu dự án. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when a project has documents — docs/, specs/, plans, tickets, README/CLAUDE.md, Word, Excel, PowerPoint, PDF, HTML or CSV files — and no .knowledge/INDEX.md yet, when the index check prints STALE, after adding or changing project documents, or before searching project documents for a task. Triggers (vi): đọc tài liệu dự án, docs, specs, file Excel/Word/PDF/PowerPoint, tìm trong tài liệu, yêu cầu dự án. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills

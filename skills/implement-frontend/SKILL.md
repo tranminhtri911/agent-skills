@@ -1,6 +1,6 @@
 ---
 name: implement-frontend
-description: "Use when building, specifying, reviewing or changing UI screens, pages, components, forms, client-side state, routing, data fetching, responsive layouts or themes in React, Next.js, Vue, Nuxt, Angular, Svelte, or mobile apps in React Native, Expo, Flutter, Jetpack Compose or SwiftUI. Triggers (vi): màn hình, giao diện, trang, component, form, nút, hiển thị, widget, màn hình khóa, responsive, app Android/iOS, dark mode, theme. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when building, specifying, reviewing or changing UI screens, pages, components, forms, client-side state, routing, data fetching, responsive layouts or themes in React, Next.js, Vue, Nuxt, Angular, Svelte, or mobile apps in React Native, Expo, Flutter, Jetpack Compose or SwiftUI. Triggers (vi): màn hình, giao diện, trang, component, form, nút, hiển thị, widget, màn hình khóa, responsive, app Android/iOS, dark mode, theme. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills

@@ -22,6 +22,7 @@ Every error path fails open (never blocks the user because the hook itself broke
 import json
 import os
 import re
+import subprocess
 import sys
 import unicodedata
 
@@ -32,10 +33,10 @@ ALL_SKILLS = [
     "dev-orchestrate", "discover-codebase", "design-change", "change-database",
     "design-api", "implement-backend", "implement-frontend", "verify-ui",
     "design-reliability", "review-performance", "review-security", "test-safely",
-    "design-infrastructure", "write-maintainable-code", "index-project-knowledge",
+    "design-infrastructure", "write-maintainable-code", "code-style", "index-project-knowledge",
     "review-code",
 ]
-BASE_EDIT = ["dev-orchestrate", "discover-codebase", "write-maintainable-code"]
+BASE_EDIT = ["dev-orchestrate", "discover-codebase", "write-maintainable-code", "code-style"]
 
 # superpowers process skills, combined with devskills: dev-orchestrate routes first, then the process
 # skill (how to work), then the domain skills (what rules apply), then verification before handover.
@@ -205,6 +206,18 @@ QUESTION_TAIL_RE = re.compile(
     r"|o\s+dau|the\s+nao|ra\s+sao|bao\s+nhieu|roi\s+chu|dung\s+chu)"
     r"(\s+(vay|a|nhi|ha|the|day|z|ha|chu))*\W*$")
 IMPERATIVE_RE = re.compile(r"(?<![a-z0-9])(di|giup|hay|vui\s+long|nhe|luon|please)(?![a-z0-9])")
+# Claude Code wraps pasted text as <pasted_content id="…">…</pasted_content id="…">. A pasted checklist, log or
+# document names many areas and imperatives that are not the user's request, so only the user's own words are
+# routed; the pasted text is routed only when the message contains nothing else.
+PASTED_RE = re.compile(r'<pasted_content id="([^"]*)">(.*?)</pasted_content id="\1">', re.S)
+
+
+def own_words(prompt):
+    """The user's own text of a prompt, or the pasted text when the user wrote nothing besides it."""
+    own = PASTED_RE.sub(" ", prompt or "")
+    if own.strip():
+        return own
+    return " ".join(m.group(2) for m in PASTED_RE.finditer(prompt or ""))
 
 PROMPT_AREA_RES = {skill: _words_re(words) for skill, words in PROMPT_AREAS.items()}
 WORK_RE = _words_re(WORK_WORDS)
@@ -221,7 +234,7 @@ def route_prompt(prompt):
     areas: domain skills whose keywords occur; work: it asks for work, not only a question;
     build: the work changes code; bug / feature / plan / review_feedback: which process applies.
     """
-    text = fold(prompt).strip()
+    text = fold(own_words(prompt)).strip()
     if text.startswith("[request interrupted"):
         text = ""  # Claude Code's own marker, not a request
     matched = IGNORED_PHRASES.sub(" ", text)
@@ -249,7 +262,7 @@ def skills_for_request(route, with_superpowers=False):
     if route["feature"] or route["plan"]:
         req.append("design-change")
     if route["build"] or route["bug"]:
-        req += ["write-maintainable-code", "test-safely", "review-code"]
+        req += ["write-maintainable-code", "code-style", "test-safely", "review-code"]
     if with_superpowers:
         if route["bug"]:
             req.append(SP_DEBUG)
@@ -451,6 +464,68 @@ def cmd_prompt(p):
     emit({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": text}})
 
 
+# --------------------------------------------------------------------------- automatic style routing
+# The code-style skill's runtime detects the file's language, its project root's frameworks and the
+# repository's style tools; the gate passes that to Claude the first time a (root, language) is edited.
+CODE_STYLE_DS_ENV = "DEVSKILLS_CODE_STYLE_DS"
+STYLE_HINT_TIMEOUT_SECONDS = 8
+EDIT_TOOLS = ("Edit", "Write", "MultiEdit", "NotebookEdit")
+
+
+def code_style_ds(cwd):
+    """The code-style skill's ds.py: explicit override, project install, then user install; None when absent."""
+    candidates = [
+        os.environ.get(CODE_STYLE_DS_ENV) or "",
+        os.path.join(cwd or "", ".claude", "skills", "code-style", "scripts", "ds.py") if cwd else "",
+        os.path.join(HOME, ".claude", "skills", "code-style", "scripts", "ds.py"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def style_lookup_directory(path, cwd):
+    """Where to run the lookup: the session directory when it contains the file, else the file's nearest folder."""
+    if cwd and os.path.abspath(path).startswith(os.path.abspath(cwd) + os.sep):
+        return cwd
+    directory = os.path.dirname(os.path.abspath(path))
+    while directory and not os.path.isdir(directory):
+        directory = os.path.dirname(directory)
+    return directory or None
+
+
+def style_hint(p, path, st):
+    """Context naming the style references for this file; None when already given for its root and language."""
+    ds = code_style_ds(p.get("cwd"))
+    lookup_directory = style_lookup_directory(path, p.get("cwd"))
+    if not ds or not lookup_directory:
+        return None
+    completed = subprocess.run([sys.executable, ds, "style", "--path", os.path.abspath(path), "--json"],
+                               cwd=lookup_directory, capture_output=True, text=True,
+                               timeout=STYLE_HINT_TIMEOUT_SECONDS, check=False)
+    if completed.returncode != 0:
+        return None
+    result = json.loads(completed.stdout)
+    if not result.get("language"):
+        return None
+    hint_key = "%s|%s|%s" % (result.get("repository"), result["root"], result["language"])
+    hinted = st.setdefault("style_hinted", [])
+    if hint_key in hinted:
+        return None
+    hinted.append(hint_key)
+    save_state(p.get("session_id") or "", st)
+    references_dir = os.path.join(os.path.dirname(os.path.dirname(ds)), "references")
+    frameworks = ", ".join(result["frameworks"]) or "none detected"
+    text = ("CODE STYLE (auto-detected from the source): %s is %s in project root `%s` (frameworks: %s). "
+            "Before writing it, read %s in %s and apply them." % (
+                result["path"], result["language"], result["root"], frameworks,
+                ", ".join(result["references"]), references_dir))
+    if result.get("style_tools"):
+        text += " The repository's own style tools win where they differ: %s." % ", ".join(result["style_tools"])
+    return text
+
+
 def deny(reason):
     emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
                                  "permissionDecisionReason": reason}})
@@ -479,6 +554,11 @@ def cmd_gate(p):
         deny("SKILL GATE: your request touches %s. Before %s, load with the Skill tool (one call each, in "
              "parallel): %s. Then state `Skills: ...` and retry." % (
                  ", ".join(s for s in req if s not in BASE_EDIT) or "code", what, ", ".join(missing)))
+    if p.get("tool_name") not in EDIT_TOOLS:
+        return
+    hint = style_hint(p, path, st)
+    if hint:
+        emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": hint}})
 
 
 def cmd_subagent(p):

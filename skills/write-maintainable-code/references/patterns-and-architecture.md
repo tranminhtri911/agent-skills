@@ -25,7 +25,7 @@ If old and new styles coexist, follow the one used by the most recent modules ne
 | External provider (payment, mail, storage) | the existing client/gateway/adapter | port + adapter + simulator (ARC-004) |
 | Behaviour that varies by type, 3+ cases and growing | the project's handler map / polymorphism / enum method | dict of handlers or enum method; 2 stable cases stay `if/else` |
 | Choosing an implementation by config | the existing factory/provider binding | a function or dict lookup; no abstract factory for one implementation |
-| Building complex objects | factories already used (factory_boy, Laravel factories, fishery) | keyword args / dataclass / object literal; a Builder only for test data with many variants |
+| Building complex objects | factories already used (factory_boy, Laravel factories, fishery) | keyword args / dataclass / object literal; a Builder for test data with many variants, or when the language lacks named/default arguments and the object has many optional parts (code-style `references/patterns.md`) |
 | Side effects after a write | the project's events/listeners, jobs, outbox | explicit call after commit (`transaction.on_commit`, `afterCommit()`); avoid hidden signals |
 | Dependencies and wiring | the framework's DI (Laravel container, FastAPI `Depends`, ASP.NET DI) or plain parameters | pass dependencies as parameters; never add a DI container |
 | Frontend server state / shared state | the project's query library, store, context, custom hooks | local state first; a new store library needs a design decision |

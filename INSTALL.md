@@ -17,10 +17,10 @@ python3 agent-skills.py help install
 ## 2. Installation
 
 ```bash
-# Install 16 skills into ~/.claude/skills plus the latest ui-ux-pro-max reference (default)
+# Install 17 skills and the routing rule; no third-party UI tool or skill-gate hooks by default
 python3 agent-skills.py install
-# Skip ui-ux-pro-max
-python3 agent-skills.py install --without-ui-ux-pro-max
+# Opt into an exact reviewed UI CLI release (replace X.Y.Z)
+python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z
 # Include the latest CodeGraph
 python3 agent-skills.py install --with-codegraph
 # Install selected skills
@@ -73,14 +73,16 @@ python3 -m pip install "pillow==13.0.0" "pypdf==6.21.3"
 Claude only loads skills when it chooses to. The skill gate makes that mandatory with Claude Code hooks:
 a PreToolUse hook denies Edit/Write of code until the routed skills (from the file kind/path) were loaded with the Skill tool; UserPromptSubmit, SubagentStart and post-compaction hooks re-inject the rule; a Stop hook blocks a final report whose "Skills applied" lists skills never loaded.
 
-It is installed by the normal command, for the `claude-user` target only (hooks are user-scope Claude Code settings):
+It is opt-in. Prefer project scope; user scope must be explicitly requested:
 
 ```bash
-python3 agent-skills.py install                        # skills + rule + skill gate
-python3 agent-skills.py install --without-skill-gate   # skip the gate
-python3 agent-skills.py uninstall                      # removes the gate with the skills
-python3 tools/skill-gate/install.py [--dry-run|--uninstall]   # the gate alone
+python3 agent-skills.py install --target claude-project --with-skill-gate
+python3 agent-skills.py install --target claude-user --with-skill-gate
+python3 tools/skill-gate/install.py --project /path/to/project --dry-run
+python3 tools/skill-gate/install.py --project /path/to/project --uninstall
 ```
+
+An ordinary install/update preserves an already-installed hook but does not add one. Uninstall removes the selected target's gate. `--without-skill-gate` takes precedence. Hook execution/state is Claude-specific and remains independent of the host's dangerous-command approval policy.
 
 Existing hooks in `~/.claude/settings.json` are kept; the first install writes a `settings.json.skill-gate-backup-*` copy.
 
@@ -122,7 +124,7 @@ python3 ~/.claude/skills/dev-orchestrate/scripts/ds.py doctor
 ```toml
 [code]
 # Multiline comments: block (/* */) | line | off
-multiline_comment_style = "block"
+multiline_comment_style = "off"
 # Flag literals matching existing domain enums/constants
 hardcoded_values = true
 # Minimum severity that fails a gate
@@ -132,7 +134,7 @@ fail_on = "high"
 # auto | postgresql | mysql | sqlite | sqlserver | oracle | generic
 engine = "postgresql"
 # discouraged | forbidden | allowed
-foreign_key_policy = "discouraged"
+foreign_key_policy = "allowed"
 
 [change]
 # Protected paths require approval (footprint fails otherwise)
@@ -189,7 +191,7 @@ API-011 automation needs the optional `contracts` extra: `python3 -m pip install
 ```bash
 # Identify outdated versions and manually edited files
 python3 agent-skills.py status
-# Update skills with backups and ui-ux-pro-max to latest
+# Update skills with backups; optional tools are unchanged
 python3 agent-skills.py update
 # Also update CodeGraph to latest
 python3 agent-skills.py update --with-codegraph
@@ -198,6 +200,15 @@ python3 agent-skills.py update --force
 # Restore the latest or a selected backup
 python3 agent-skills.py rollback
 python3 agent-skills.py rollback --backup 20261028T101500123456Z
+```
+
+### Sharing a release ZIP
+
+Do not zip the working folder by hand (Finder/Explorer adds `__MACOSX/` and includes `.git/`, `.devskills/`, caches and logs). Build from the source allowlist, then check it:
+
+```bash
+python3 tools/package-release.py /tmp/agent-skills.zip
+unzip -l /tmp/agent-skills.zip   # review docs/ before sharing outside the team
 ```
 
 ## 9. Uninstall

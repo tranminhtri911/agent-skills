@@ -1,6 +1,6 @@
 # Integrity without database foreign keys (plan §14.2)
 
-Project default: `foreign_key_policy = "discouraged"` — no new FKs, existing FKs untouched. A missing FK moves responsibility for referential integrity into the application, so it must be designed, not assumed.
+Use this reference only when the project explicitly sets `foreign_key_policy = "discouraged"` or `"forbidden"`. The suite default is `"allowed"`; existing FKs remain untouched. A missing FK moves responsibility for referential integrity into the application, so it must be designed, not assumed.
 
 ## Required for every relation without an FK
 

@@ -1,6 +1,6 @@
 ---
 name: write-maintainable-code
-description: "Use when writing or modifying source code in any language — naming classes, methods, variables and constants, writing comments or docstrings, structuring functions and error handling, or reviewing code for readability and maintainability. Triggers (vi): viết hoặc sửa code, đặt tên biến/hàm, comment, docstring, code sạch, dễ bảo trì, refactor. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when writing or modifying source code in any language — naming classes, methods, variables and constants, writing comments or docstrings, structuring functions and error handling, or reviewing code for readability and maintainability. Triggers (vi): viết hoặc sửa code, đặt tên biến/hàm, comment, docstring, code sạch, dễ bảo trì, refactor. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills
@@ -15,6 +15,8 @@ Code is read far more than it is written: explicit names, small single-purpose f
 ## Hand-offs — this skill covers how code reads, not what it must do
 
 What the code must do in each area comes from the domain skills; load them with the Skill tool before editing that part (dev-orchestrate's routing table): queries, transactions, deletes → change-database; endpoints → design-api; services and jobs → implement-backend; screens → implement-frontend; external calls → design-reliability; auth and input → review-security; concurrency and loops → review-performance; tests → test-safely. A full review of a diff or PR → review-code (this skill covers its readability stage).
+
+Naming and casing per language, control-flow layout, lambdas, `static`, and when to apply repository/builder/interface/abstract/strategy/factory, per language and framework → **REQUIRED:** code-style. Load it together with this skill for every code change, new code and maintenance alike.
 
 ## Reuse the project's base first (CTX-009)
 
@@ -38,7 +40,7 @@ Per-stack table, frontend/backend single source of truth and allowed exceptions:
 ## Patterns and architecture: learn from the source, no over-engineering
 
 - Learn first: `inspect` lists the **patterns in use** (Repository, Service, Action, FormRequest, `selectors.py`… with where they live) and the **pattern libraries/tools** the project has; read one request end to end in the reference module and the real import directions. The source's architecture is the spec.
-- Each job uses the project's existing pattern (queries, rules, validation, side effects, wiring). A new pattern, layer or library only for a named problem in this change that the source has no answer for (DES-007, DES-008) — never Clean Architecture, Repository, Builder or a DI container "because it is best practice".
+- Each job uses the project's existing pattern (queries, rules, validation, side effects, wiring). A new pattern, layer or library only for a named problem in this change that the source has no answer for (DES-007, DES-008) — never Clean Architecture, Repository, Builder or a DI container "because it is best practice". When a pattern's signal is present (repeated data access, interchangeable providers, many optional constructor parts…), apply it as code-style's `references/patterns.md` describes.
 - Keep the boundaries the source keeps: no imports against its layer direction, features talk through public modules, no cycles (ARC-003, ARC-007).
 - Search before writing a helper; two copies are a note, three are extracted into the owning module (CODE-012).
 
@@ -62,14 +64,13 @@ On a complex or long-lived system, judge each edit by risk: a small fix in well-
 | Enum/state | Finite domain | `PaymentStatus.PENDING` |
 | ID | Kind and scope | `tenant_id`, `provider_payment_id` |
 
-Follow the language convention (snake_case in Python, camelCase in JS/TS/Java, PascalCase methods in C#). Avoid `data`, `tmp`, `obj`, `handleStuff`, `doIt` and abbreviations outside well-known ones (`id`, `url`, `db`). Name constants instead of magic numbers/strings — reusing the project's existing ones first (CODE-011).
+Follow the language convention (snake_case in Python, camelCase in JS/TS/Java, PascalCase methods in C#); the full casing tables per language and framework are in code-style. Avoid `data`, `tmp`, `obj`, `handleStuff`, `doIt` and abbreviations outside well-known ones (`id`, `url`, `db`). Name constants instead of magic numbers/strings — reusing the project's existing ones first (CODE-011).
 
 ## Comments and docs (DOC-001…006)
 
 - Explain **why**, invariants, non-obvious decisions, and the contract: inputs/constraints, output, errors, side effects. Never narrate what the line obviously does.
 - Public functions, business rules, transaction/lock/retry code and non-obvious algorithms get a short doc comment.
-- **Multi-line comments use `/* … */`** in languages that support it (JS/TS/Java/C#/C/C++/PHP/Go-not-preferred/SQL); API docs use the doc form (`/** … */`, `///` in C#). **Python uses `#` lines for comments and `"""docstrings"""` for documentation** — never `/* */`. YAML/TOML/shell use `#`. Templates per language: [comment-templates.md](references/comment-templates.md).
-- Go convention is `//` for all comments; keep it there.
+- DOC-003: follow the repository’s existing comment/doc conventions and language idioms. Use block comments or line comments as appropriate; Python uses `#` or docstrings, Go generally uses `//`. Only enforce a specific style when the project explicitly requests it through `[code].multiline_comment_style` (`off` by default). Templates are examples: [comment-templates.md](references/comment-templates.md).
 - TODO needs an owner or issue: `TODO(tri): …` or `TODO(#123): …`. Delete commented-out code (git keeps history). Update comments with the code.
 - Comment language follows the repository; identifiers in English.
 

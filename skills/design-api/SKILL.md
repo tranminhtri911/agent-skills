@@ -1,6 +1,6 @@
 ---
 name: design-api
-description: "Use when specifying, reviewing, creating or changing an HTTP endpoint, request/response schema, status codes or error format, pagination/filtering, versioning, webhook, event or message contract, or when duplicate submissions and retries must not create duplicate effects. Triggers (vi): thêm/sửa API, endpoint, webhook, request/response, mã lỗi, phân trang, lọc, gửi trùng, idempotency. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when specifying, reviewing, creating or changing an HTTP endpoint, request/response schema, status codes or error format, pagination/filtering, versioning, webhook, event or message contract, or when duplicate submissions and retries must not create duplicate effects. Triggers (vi): thêm/sửa API, endpoint, webhook, request/response, mã lỗi, phân trang, lọc, gửi trùng, idempotency. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills

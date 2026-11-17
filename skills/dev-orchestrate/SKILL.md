@@ -1,6 +1,6 @@
 ---
 name: dev-orchestrate
-description: "Use when working on any development task or ticket for an application (backend, frontend, API, database, jobs, infrastructure), in any language — requirements, impact or feasibility, planning or specifying, implementing a feature, bugfix or refactor, tests, review, commit or reporting results. Triggers (vi): làm task, ticket, thêm chức năng, sửa lỗi, triển khai, phân tích tác động, viết spec, test, review, commit, báo cáo kết quả. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load the domain skills it routes to in the same step."
+description: "Use when working on any development task or ticket for an application (backend, frontend, API, database, jobs, infrastructure), in any language — requirements, impact or feasibility, planning or specifying, implementing a feature, bugfix or refactor, tests, review, commit or reporting results. Triggers (vi): làm task, ticket, thêm chức năng, sửa lỗi, triển khai, phân tích tác động, viết spec, test, review, commit, báo cáo kết quả. Repository-specific questions are in scope; pure conceptual questions do not require the implementation workflow. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills
@@ -12,48 +12,39 @@ Every code change goes through scope → context → design → implement → ve
 
 `DS` = `python3 "${CLAUDE_SKILL_DIR}/scripts/ds.py"` (bundled runtime, Python ≥ 3.11, no dependencies).
 
-## Skill routing — load before acting (mandatory)
+## Skill routing — scoped loading (ROUTE-001)
 
-This skill only summarizes; the rules that decide a correct change live in the domain skills below. **Violating the letter of this routing is violating its spirit.**
+For repository development, load this router first. Select domain skills from the actual changed behavior, commands and risk, not keywords alone. Load the owning skill before working in its area, once per session; load deeper references only when needed. A mention of a database in a typo fix does not make it a database change. Queries, locks, migrations, payments, permissions and external effects always require their safety skills regardless of diff size.
 
-1. At G0, and again whenever the work reaches a new area, check every row against what the task **touches** — code, data, specs, tests or reviews — not against how the task was phrased. "Delete test surveys from the result list" touches deletes across related tables: that is change-database even if nobody said "database".
-2. Load every matching skill with the Skill tool **before** analyzing, specifying, editing or testing that area (no Skill tool: read `../<skill>/SKILL.md` next to this file). Several rows usually match; load them all.
-3. State the selection in one line at G0 — `Skills: discover-codebase, change-database, …` — and in the final report list each routed skill with at least one of its rule IDs that shaped the work (e.g. `change-database TX-001`), or why it was unavailable.
+- Unfamiliar code → discover-codebase; design choices or R2+ → design-change.
+- SQL/ORM/data integrity → change-database; endpoint contracts → design-api.
+- Server logic → implement-backend; UI → implement-frontend and verify-ui.
+- Remote calls/retries/jobs → design-reliability; concurrency/resource use → review-performance.
+- Trust boundaries/secrets/permissions → review-security; tests → test-safely.
+- Infrastructure → design-infrastructure; source edits → write-maintainable-code and code-style.
+- Project document search/updates → index-project-knowledge; diff review → review-code.
 
-| The task touches… | REQUIRED skill |
-| --- | --- |
-| any code, ticket or feature you have not fully traced | discover-codebase |
-| risk R2+, more than one reasonable approach, a plan, spec, backlog or estimate | design-change |
-| tables, SQL, stored procedures, ORM models/queries, repositories, migrations, deletes (hard or soft), transactions, locks, connection pools, CRUD that writes | change-database |
-| HTTP routes/controllers, request/response or error format, OpenAPI, webhooks, events, idempotency | design-api |
-| handlers, services, use cases, repositories, background jobs, batches, schedulers, uploads, external API clients | implement-backend |
-| screens, pages, components, forms, client state, routing, styles | implement-frontend, then verify-ui |
-| external calls, retries, timeouts, queues, outbox, jobs that must not run twice or die halfway, writes across several systems | design-reliability |
-| threads, async, workers, caches, large files/streams, loops over many rows, N+1, slowness | review-performance |
-| auth, sessions, tokens, roles/permissions/tenants, user input reaching SQL/files/URLs/templates, secrets, payments, personal data | review-security |
-| writing, planning or running tests, seed/SQL test scripts, money, batch, email/SMS, paid APIs, production-like data | test-safely |
-| Terraform/CloudFormation/CDK/Pulumi, VPC, IAM, RDS/Cloud SQL | design-infrastructure |
-| writing or modifying source code | write-maintainable-code |
-| project documents (docs/, specs/, tickets, Office/PDF files) | index-project-knowledge |
-| reviewing a diff, PR/MR or commit, re-checking a task, or your own change before handover | review-code |
+Small conceptual questions without repository work receive a direct answer, without a development run. State selected skills briefly and finish repository work with `Skills applied` and applicable rule IDs. A project can document narrower routing for unrelated areas; it cannot waive safety for actual cloud, remote DB, money or permission operations.
 
-| Excuse | Reality |
-| --- | --- |
-| "It's a small fix / just a spec / just a review" | Risk comes from side effects; a one-line filter or a delete spec can lose data. Route by what it touches. |
-| "I already know SQL, locking, React…" | The domain skill holds this suite's house rules (no new FKs, TX-xxx, API-011…) that general knowledge does not. |
-| "The core rules below already summarize it" | The core rules are pointers. A parenthesized skill name in them is a load instruction. |
-| "The user didn't mention the database / security" | Users describe goals, not areas. The table decides. |
-| "I'll check the skill before handing over" | Loading after the work means redoing it; load before. |
+## Execution modes (MODE-001)
+
+| Mode | Selection | Required work |
+| --- | --- | --- |
+| Lightweight | R0 or bounded R1, no trust/data/contract effects | Read affected context, focused check or test, review diff, concise result; no run directory, roster, trace or generated report required |
+| Standard | R1 spanning modules or requiring reproducible evidence | Context map, focused tests and stack checks, concise evidence; use run/trace when useful |
+| Strict | R2/R3, API/data/auth/payment/concurrency/providers | Full evidence workflow in [execution-workflow.md](references/execution-workflow.md), applicable safety checks, failure paths and recovery |
+
+`DS risk` suggests the mode; confirm actual effects. No mode bypasses OPS-011/012/013, truthful evidence or scope protection. Do not lower risk because a diff is short.
 
 ## Core rules (apply to every task)
 
 1. **Understand before editing.** Trace entry point → callers → classes/functions/variables → data → side effects (REQUIRED: discover-codebase). Never change important logic from a name or a snippet.
 2. **Recommend like a senior.** Separate facts, assumptions and unknowns; give options, tradeoffs, risks, verification and recovery (REQUIRED for R2+: design-change).
 3. **Learn and reuse the project's base first (CTX-009).** Before writing, open the project-owned base classes, shared helpers, custom hooks, house decorators and one finished reference module of the same kind (`inspect` lists them under "Project conventions"); new code imitates them. Domain values (status, type, role, limits, URLs, messages) come from the project's enums/constants/config/i18n, never bare literals (CODE-011). Patterns and layering are learned from the source too (`patterns in use`); no new layers, libraries, bases or patterns without a named problem the existing ones do not solve (DES-007, DES-008) — no over-engineering.
-4. **Readable code.** Explicit names, small functions, comments that explain why plus input/output/errors of non-obvious contracts; multi-line comments use `/* … */` where the language supports it, `#` lines and docstrings in Python (write-maintainable-code).
-5. **Feature modules.** router/controller → service/use case → repository; one folder per API feature or screen (implement-backend, implement-frontend).
+4. **Readable code.** Explicit names, small functions, comments that explain why plus input/output/errors of non-obvious contracts; comments follow the repository and language conventions (write-maintainable-code); naming, layout and pattern choice follow the language and framework (code-style).
+5. **Existing architecture first.** Follow the repository’s layers and module layout; introduce a service/repository or feature folder only for a concrete responsibility (implement-backend, implement-frontend).
 6. **Bounded resources.** Thread pools not unbounded threads, timeouts on every remote call, cleanup on every path, no leaks (review-performance).
-7. **Databases.** Shared engine/pool, one session per request/job, short transactions, multi-step writes atomic with automatic rollback, indexes from real queries, new FKs discouraged but integrity designed (change-database).
+7. **Databases.** Shared engine/pool, one session per request/job, short transactions, multi-step writes atomic with automatic rollback, indexes from real queries, FK policy follows project conventions with integrity designed explicitly (change-database).
 8. **Dangerous data stays fake.** Money, batch jobs, email/SMS, paid APIs, load and production data are exercised only with mocks, simulators and isolated environments (test-safely).
 9. **Security and fallback never weaken auth, integrity or isolation** (review-security, design-reliability).
 10. **Touch little running logic.** On complex systems add new code beside the running logic and connect it at one point; separate complex calculations (versioned unit + selector) instead of rewriting them; plan the files to touch, respect protected paths; judge by risk, not by ritual (CHG-001..006, write-maintainable-code). `DS footprint` shows what existing code changed.
@@ -72,7 +63,7 @@ Proceed with local work necessary for the requested task without asking for conf
 
 For remote operations outside cloud and database access, ask for confirmation when a dangerous command affects a known or reasonably suspected non-local server: dev, STG/staging, production or other remote/shared infrastructure. Examples include deleting or overwriting server data, changing remote permissions/infrastructure, and deploying. Read-only inspection outside cloud and database access does not require this dangerous-command confirmation. If concrete signs suggest a remote target but its identity is unclear, clarify it before the dangerous step; do not treat every local command as uncertain.
 
-Judge the affected resource, not where the command starts: SSH, remote Docker/Kubernetes contexts, cloud CLIs and localhost tunnels can affect non-local servers. Authorization and preferences persist across the conversation; do not repeat approval already covering the exact cloud/non-local DB actions or, for other remote work, the same target and effect. New cloud/non-local DB actions, changed targets/profiles and retries outside the approved scope require a new warning and approval. Explain the server and effect when approval is missing. Clarifications about requirements or changes outside task scope are separate from dangerous-command confirmation. Do not install approval hooks or blanket permission `ask` rules.
+Judge the affected resource, not where the command starts: SSH, remote Docker/Kubernetes contexts, cloud CLIs and localhost tunnels can affect non-local servers. Classify targets as proven local, non-local or unknown (OPS-014): indirect commands, env/config targets, network mounts and tunnelled localhost ports are not proof of local; unresolved means non-local, and a timeout never approves it. Authorization and preferences persist across the conversation; do not repeat approval already covering the exact cloud/non-local DB actions or, for other remote work, the same target and effect. New cloud/non-local DB actions, changed targets/profiles and retries outside the approved scope require a new warning and approval. Explain the server and effect when approval is missing. Clarifications about requirements or changes outside task scope are separate from dangerous-command confirmation. Do not install approval hooks or blanket permission `ask` rules.
 
 Existing user restrictions on AWS, Azure, production, real payments, secrets and external communications still apply. Local work does not authorize a remote mutation. Details: [dangerous-operations.md](references/dangerous-operations.md).
 
@@ -82,26 +73,12 @@ Existing user restrictions on AWS, Azure, production, real payments, secrets and
 
 | Risk | Typical change | Minimum evidence |
 | --- | --- | --- |
-| R0 | text, comment, small layout | diff review, `check-code`, `scan-secrets` |
+| R0 | text, comment, small layout | diff review and a relevant focused check |
 | R1 | local logic, no contract/data change | + context map, focused unit tests |
 | R2 | API, DB, auth, cache, queue, concurrency, external calls | + preflight, integration tests on isolated engines, decision memo recommended |
 | R3 | money, batch, data deletion, permissions, production impact | + decision memo, failure-path and simulator tests, recovery plan |
 
 Risk comes from side effects, not diff size. Get a suggestion with `DS risk`; you may raise it, and lowering it needs a written reason.
-
-## Workflow
-
-1. **G0 Scope.** Restate goal and acceptance criteria; write them as `acceptance.json` ([template](assets/acceptance.json)). Apply the skill routing table and state `Skills: …`. `DS run start --risk R?` creates the evidence folder (`.devskills/runs/<id>/`, git-ignored). Ask only questions that change behavior or permissions.
-2. **G1 Context.** discover-codebase → `DS inspect --feature <words> --run <id>`; then read the files it lists, starting with the project's bases and the reference module ("Project conventions"). Re-apply the routing table to what the map found (tables written, routes, screens, external calls) and load any newly matching skill.
-3. **G2 Design.** design-change for R2+. Fix the expected checks before running any: `DS roster init --run <id> --risk R?`, add checks with `DS roster add <check-id> --run <id> --reason "..."`.
-4. **G3 Implement.** In small, reviewable steps, with every routed skill already loaded: write-maintainable-code, implement-backend, design-api, implement-frontend, change-database, review-performance, design-reliability, design-infrastructure (VPC/subnets, compute, RDS/Cloud SQL, IAM, Terraform/CloudFormation — the agent never applies). Opening a file of a new area (a repository, a migration, a job) mid-change means applying the routing table again first.
-5. **G4 Verify.** Primary evidence comes from the stack's own tools: `DS native-checks --execute --run <id>` (lint, typecheck, build, framework/migration checks) and tests through test-safely (`DS preflight`, `DS run-tests`). Then verify-ui for screens, review-security for trust boundaries, `DS api-diff` when the API spec changed, `DS check-infra` when infrastructure code changed, `DS footprint --base <branch> --scope '<planned glob>'` for how much existing code changed, and the supporting static checks `DS check-code`, `DS check-sql`, `DS scan-secrets` with `--run <id>`. Self-review the diff with review-code (REV-009) before the report. Finally link every criterion to its evidence: `DS trace --run <id> --file acceptance.json` (verified / weak / failed / unverified, matrix in the report). A test reference must match a passing testcase's file/module, class and exact name (including parameter id); a passing check alone cannot prove that test ran. Missing identities, skipped tests and legacy reports stay unverified; rerun with an identifiable JUnit report. Checks scale with risk; the roster lists which ones are required.
-6. **G5 Report.** Write `summary.md` (what changed and why, behavior, residual risks, next actions) and run `DS report --run <id> --summary-file summary.md`. Waive a check only with `DS roster waive <check-id> --run <id> --reason "..."`; secrets and preflight checks cannot be waived.
-   For new/changed HTTP endpoints, review API-011 coverage per method/path before handover: invocation, fields, success/error samples, permissions, data effects and execution evidence status (design-api `references/endpoint-examples.md`). A generic schema/example or a passing `api-diff` does not establish sample completeness.
-   Run `DS api-examples --spec docs/openapi.json --file docs/api-examples.json --run <id>` (`api.examples`, required by API/API-spec rosters; optional contracts extra). Use `run-tests --capture` for claimed local evidence and review actual export/policy/business scope separately; format and limits are in design-api `references/automatic-examples.md`.
-7. **G6 Release.** Deploy or publish only within the user's authorization; prepare a reviewable result before any required approval. Local data processing is ordinary task work.
-
-Plans, specs and decision records go into the project's `docs/` or `specs/` folder, following its existing convention (details in design-change). If the project has `.knowledge/INDEX.md`, rebuild it after adding documents (index-project-knowledge).
 
 ## Bugs and refactors
 

@@ -18,8 +18,8 @@ PROFILE_FILE_NAME = ".devskills.toml"
 
 DEFAULT_PROFILE: dict[str, Any] = {
     "code": {
-        # The project preference: multi-line comments use /* ... */ where the language supports it.
-        "multiline_comment_style": "block",
+        # Follow existing comment conventions unless a project opts into a style check.
+        "multiline_comment_style": "off",
         "max_function_lines": 60,
         "doc_min_lines": 12,
         "fail_on": "high",
@@ -28,7 +28,7 @@ DEFAULT_PROFILE: dict[str, Any] = {
     },
     "database": {
         "engine": "auto",
-        "foreign_key_policy": "discouraged",
+        "foreign_key_policy": "allowed",
         "index_prefixes": ["idx_", "ix_"],
         "unique_index_prefixes": ["uq_", "ux_", "uniq_"],
     },

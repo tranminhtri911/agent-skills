@@ -1,6 +1,6 @@
 ---
 name: design-change
-description: "Use when a change has more than one reasonable approach, touches API contracts, database schema, auth, money, concurrency or external providers (risk R2-R3), or when the user asks for a senior recommendation, tradeoffs, feasibility, a technical proposal, a plan, a backlog or a spec, including for a ticket. Triggers (vi): đề xuất phương án, khả thi, đánh giá tác động, thiết kế, lên kế hoạch, spec, chia task, ước lượng, tính năng mới. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when a change has more than one reasonable approach, touches API contracts, database schema, auth, money, concurrency or external providers (risk R2-R3), or when the user asks for a senior recommendation, tradeoffs, feasibility, a technical proposal, a plan, a backlog or a spec, including for a ticket. Triggers (vi): đề xuất phương án, khả thi, đánh giá tác động, thiết kế, lên kế hoạch, spec, chia task, ước lượng, tính năng mới. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills
@@ -58,7 +58,7 @@ When the context map shows `code_graph.available`, take the blast radius for the
 - Duplicate submit: disabling the button is UX only; the server needs idempotency plus a unique constraint.
 - Slow query: query shape, index and pagination before a distributed cache.
 - Multi-system steps: DB transaction + outbox + idempotent consumer + reconciliation, not a "distributed rollback".
-- New FK: project default is no new DB foreign keys; design integrity ownership instead (change-database).
+- New FK: follow project policy and existing migrations; prefer enforced integrity unless there is a documented reason otherwise (change-database).
 - Modular monolith first; split services only for real ownership/scaling boundaries.
 
 ## Red flags

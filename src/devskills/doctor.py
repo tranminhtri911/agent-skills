@@ -97,6 +97,7 @@ def collect_capabilities() -> dict[str, Any]:
         },
         "platform": {"system": platform.system(), "release": platform.release(), "machine": platform.machine()},
         "tools": tools,
+        "risky_profiles_require_os_isolation": True,
         "network_isolation": "os_sandbox_macos+python_socket_guard" if sandbox_exec else "python_socket_guard_only(partial)",
         "screenshots": {
             "playwright_python": playwright_version,

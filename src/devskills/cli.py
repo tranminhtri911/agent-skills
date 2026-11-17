@@ -50,7 +50,7 @@ _OPTION_HELP = {
     "attest --check-id": "check id this artifact is evidence for, e.g. design.memo",
     "inspect --max-files": "stop listing files after this many (large monorepos)",
     "check-sql --engine": "SQL dialect (default: .devskills.toml, then auto-detect)",
-    "check-sql --fk-policy": "foreign-key policy (default: .devskills.toml, then discouraged)",
+    "check-sql --fk-policy": "foreign-key policy (default: .devskills.toml, then allowed)",
     "check-sql --fail-on": "lowest severity that fails the gate",
     "run-tests --profile": "unit_offline: no network; integration_isolated / performance_isolated: loopback only; "
                            "provider_sandbox: only --allow-host hosts",
@@ -176,6 +176,11 @@ ds.py help <command> shows a command's options. Exit codes: 0 pass, 2 usage erro
     inspect.add_argument("--codegraph", choices=["auto", "on", "off"],
                          help="CodeGraph call-graph integration (default: DEVSKILLS_CODEGRAPH, then .devskills.toml, then auto)")
     inspect.set_defaults(handler="devskills.inventory:run")
+
+    style = commands.add_parser("style", help="code-style references for the languages, frameworks and style tools found in the source")
+    _add_common(style)
+    style.add_argument("--path", metavar="FILE", help="answer for one file instead of the whole repository")
+    style.set_defaults(handler="devskills.style_routing:run")
 
     risk = commands.add_parser("risk", help="suggest a risk level R0-R3 from the changed files and diff")
     _add_common(risk)

@@ -1,6 +1,6 @@
 ---
 name: implement-backend
-description: "Use when implementing, specifying, reviewing or changing server-side code — HTTP handlers, controllers, services, use cases, repositories, background jobs, batch processing, schedulers, file uploads or clients for external APIs — in any framework (FastAPI, Django, Flask, NestJS, Express, Laravel, Spring, ASP.NET). Triggers (vi): backend, API, logic nghiệp vụ, service, repository, job nền, batch, cron, upload file, xử lý nền. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when implementing, specifying, reviewing or changing server-side code — HTTP handlers, controllers, services, use cases, repositories, background jobs, batch processing, schedulers, file uploads or clients for external APIs — in any framework (FastAPI, Django, Flask, NestJS, Express, Laravel, Spring, ASP.NET). Triggers (vi): backend, API, logic nghiệp vụ, service, repository, job nền, batch, cron, upload file, xử lý nền. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills
@@ -8,7 +8,7 @@ metadata:
 
 # Implement Backend
 
-Organize by feature, keep the framework's conventions, and make every request or job follow one explicit path: validate → authenticate → authorize → use case → transaction/side effects → response.
+Follow the existing module layout and framework conventions, and make every request or job follow one explicit path: validate → authenticate → authorize → use case → transaction/side effects → response.
 
 `DS` = `python3 "${CLAUDE_SKILL_DIR}/scripts/ds.py"`.
 
@@ -77,7 +77,7 @@ Prove the rule on every writer (API, admin, worker, import), duplicate requests 
 
 | Mistake | Fix |
 | --- | --- |
-| Business logic inside the controller | Move to a service/use case with explicit inputs |
+| Business logic duplicated across entry points | Reuse the project’s existing policy/use-case location; add a layer only when it solves a concrete problem |
 | `requests.get(url)` without timeout | `timeout=(3, 10)`; one retry owner |
 | Calling the payment API inside the DB transaction | Commit state + outbox, call the provider from a worker |
 | `asyncio.create_task(...)` and forget | Durable queue for important work; TaskGroup for request-scoped work |

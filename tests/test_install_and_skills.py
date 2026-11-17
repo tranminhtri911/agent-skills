@@ -17,7 +17,7 @@ class SkillPackageTest(unittest.TestCase):
     def test_all_skills_validate(self):
         completed = run_cli("validate-skills", str(REPO_ROOT / "skills"))
         self.assertEqual(completed.returncode, 0, completed.stdout)
-        self.assertEqual(len(SKILL_NAMES), 16)
+        self.assertEqual(len(SKILL_NAMES), 17)
 
     def test_shims_match_the_canonical_copy(self):
         canonical = (REPO_ROOT / "tools" / "ds_shim.py").read_bytes()
@@ -119,40 +119,39 @@ class InstallerTest(unittest.TestCase):
             return subprocess.run([sys.executable, str(INSTALLER), *args, "--target", "claude-project", "--project", str(project)],
                                   capture_output=True, text=True, env=env, check=False, timeout=300)
 
-        dry = run("install", "--skills", "verify-ui", "--dry-run", "--with-codegraph", "--with-ui-ux-pro-max")
-        self.assertIn("ui-ux-pro-max-cli@latest init --ai claude --force", dry.stdout)
+        dry = run("install", "--skills", "verify-ui", "--dry-run", "--with-codegraph", "--with-ui-ux-pro-max", "--ui-ux-version", "1.2.3")
+        self.assertIn("--registry=https://registry.npmjs.org ui-ux-pro-max-cli@1.2.3 init --ai claude", dry.stdout)
         self.assertFalse(log.exists(), "a dry run calls nothing")
-        first = run("install", "--skills", "verify-ui", "--with-codegraph", "--with-ui-ux-pro-max")
+        first = run("install", "--skills", "verify-ui", "--with-codegraph", "--with-ui-ux-pro-max", "--ui-ux-version", "1.2.3")
         self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
         calls = log.read_text()
         self.assertIn("npm install -g @colbymchenry/codegraph@latest", calls)
-        self.assertIn(f"npx -y ui-ux-pro-max-cli@latest init --ai claude --force (cwd {project.resolve()})", calls)
+        self.assertIn(f"npx -y --registry=https://registry.npmjs.org ui-ux-pro-max-cli@1.2.3 init --ai claude (cwd {project.resolve()})", calls)
         self.assertNotIn("sudo", calls + first.stdout)
         self.assertNotIn("--global", calls, "a project target installs into the project")
         skill = project / ".claude" / "skills" / "ui-ux-pro-max" / "SKILL.md"
         self.assertTrue(skill.is_file())
         self.assertIn("codegraph 9.9.9", first.stdout)
         skill.write_text("# edited by hand\n")
-        run("update", "--skills", "verify-ui", "--with-ui-ux-pro-max")
+        run("update", "--skills", "verify-ui", "--force", "--with-ui-ux-pro-max", "--ui-ux-version", "1.2.3")
         backups = list(self.backups.rglob("ui-ux-pro-max/SKILL.md"))
         self.assertEqual([path.read_text() for path in backups], ["# edited by hand\n"], "the previous copy is backed up first")
         status = run("status", "--skills", "verify-ui")
-        self.assertIn("ui-ux-pro-max (UI design reference, installed by default): installed", status.stdout)
-        unsupported = self.installer("install", "--skills", "verify-ui", "--with-ui-ux-pro-max")
+        self.assertIn("ui-ux-pro-max (UI design reference, opt-in): installed", status.stdout)
+        unsupported = self.installer("install", "--skills", "verify-ui", "--with-ui-ux-pro-max", "--ui-ux-version", "1.2.3")
         self.assertEqual(unsupported.returncode, 1)
         self.assertIn("no uipro mapping for --target-dir", unsupported.stdout)
 
-        # Installed by default; a default attempt that cannot run is a warning, not a failed install.
+        # Optional tools never run during default installation/update.
         log.unlink()
         default = run("update", "--skills", "verify-ui")
         self.assertEqual(default.returncode, 0, default.stdout + default.stderr)
-        self.assertIn("npx -y ui-ux-pro-max-cli@latest init", log.read_text())
-        log.unlink()
+        self.assertFalse(log.exists())
         self.assertEqual(run("update", "--skills", "verify-ui", "--without-ui-ux-pro-max").returncode, 0)
         self.assertFalse(log.exists(), "--without-ui-ux-pro-max calls nothing")
         skipped = self.installer("install", "--skills", "verify-ui")
         self.assertEqual(skipped.returncode, 0, skipped.stdout + skipped.stderr)
-        self.assertIn("skipped: the skills fall back to their own UI checklists", skipped.stdout)
+        self.assertNotIn("npx -y", skipped.stdout)
 
     def test_agent_rules_are_written_updated_and_removed(self):
         project = make_temp_dir(self)
@@ -168,11 +167,11 @@ class InstallerTest(unittest.TestCase):
                                   capture_output=True, text=True, env=env, check=False, timeout=300)
 
         rules = (REPO_ROOT / "tools" / "agent-rules.md").read_text().strip()
-        dry = run("install", "--skills", "dev-orchestrate", "--dry-run")
+        dry = run("install", "--skills", "dev-orchestrate", "--with-skill-gate", "--dry-run")
         self.assertIn("agent rules: update in", dry.stdout)
         self.assertIn("old hand-pasted wording", claude_md.read_text(), "a dry run writes nothing")
 
-        first = run("install", "--skills", "dev-orchestrate")
+        first = run("install", "--skills", "dev-orchestrate", "--with-skill-gate")
         self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
         text = claude_md.read_text()
         self.assertEqual(text.count("devskills:agent-rules begin"), 1)
@@ -182,7 +181,7 @@ class InstallerTest(unittest.TestCase):
         self.assertIn("# Other\nMore rules.", text, "sections after the rule are kept")
         self.assertTrue(list((self.backups / "agent-rules").glob("*CLAUDE_md")), "the previous file is backed up")
 
-        again = run("update", "--skills", "dev-orchestrate")
+        again = run("update", "--skills", "dev-orchestrate", "--with-skill-gate")
         self.assertIn("agent rules: up to date", again.stdout)
         self.assertEqual(claude_md.read_text(), text, "a second run changes nothing")
         self.assertIn("agent rules (always-loaded, makes agents use dev-orchestrate): up-to-date",
@@ -221,12 +220,12 @@ class InstallerTest(unittest.TestCase):
 
         settings_path = claude_dir / "settings.json"
         before = settings_path.read_text()
-        dry = run("install", "--skills", "dev-orchestrate", "--dry-run")
+        dry = run("install", "--skills", "dev-orchestrate", "--with-skill-gate", "--dry-run")
         self.assertIn("skill gate:", dry.stdout)
         self.assertEqual(settings_path.read_text(), before, "a dry run writes nothing")
         self.assertFalse((claude_dir / "hooks").exists())
 
-        first = run("install", "--skills", "dev-orchestrate")
+        first = run("install", "--skills", "dev-orchestrate", "--with-skill-gate")
         self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
         data = json.loads(settings_path.read_text())
         self.assertEqual(len(gate_commands(data)), 5, "prompt, gate, subagent, compact and stop hooks")
@@ -237,7 +236,7 @@ class InstallerTest(unittest.TestCase):
         self.assertEqual(len(list(claude_dir.glob("settings.json.skill-gate-backup-*"))), 1)
 
         installed = settings_path.read_text()
-        again = run("update", "--skills", "dev-orchestrate")
+        again = run("update", "--skills", "dev-orchestrate", "--with-skill-gate")
         self.assertEqual(again.returncode, 0, again.stdout + again.stderr)
         self.assertEqual(settings_path.read_text(), installed, "a second run adds no duplicate hooks")
         self.assertEqual((claude_dir / "CLAUDE.md").read_text().count("skill-gate:begin"), 1)
@@ -271,7 +270,7 @@ class InstallerTest(unittest.TestCase):
         broken = write(home, ".claude/settings.json", "{not json")
         env = dict(os.environ, HOME=str(home), DEVSKILLS_BACKUP_DIR=str(self.backups))
         completed = subprocess.run([sys.executable, str(INSTALLER), "install", "--skills", "dev-orchestrate",
-                                    "--target", "claude-user", "--without-ui-ux-pro-max"],
+                                    "--target", "claude-user", "--with-skill-gate", "--without-ui-ux-pro-max"],
                                    capture_output=True, text=True, env=env, check=False, timeout=300)
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("not valid JSON", completed.stdout)
@@ -305,7 +304,7 @@ class InstallerTest(unittest.TestCase):
     def test_install_status_update_rollback_uninstall(self):
         installed = self.installer("install")
         self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
-        self.assertIn("16 skill(s) valid", installed.stdout)
+        self.assertIn("17 skill(s) valid", installed.stdout)
         skill = self.target / "dev-orchestrate"
         self.assertTrue((skill / "scripts" / "_runtime" / "devskills" / "cli.py").is_file())
         manifest = json.loads((skill / "scripts" / "_runtime" / "MANIFEST.json").read_text())

@@ -49,6 +49,12 @@ PATH_R2 = re.compile(r"(?i)(migrations?|alembic|models?|entities|repositor|contr
                      r"auth|config|settings|\.sql$|docker|compose|\.env\.example)")
 
 
+
+def execution_mode(risk: str) -> str:
+    """Suggest the default workflow weight; actual side effects can only raise it."""
+    return {"R0": "lightweight", "R1": "standard", "R2": "strict", "R3": "strict"}[risk]
+
+
 def _diff_text(repo_root: Path, base: str | None) -> str:
     """Changed lines only (added/removed), bounded to keep the scan fast."""
     pieces = []
@@ -121,9 +127,9 @@ def run(args: argparse.Namespace) -> int:
         metadata["suggested_risk"] = {"level": risk, "reasons": reasons}
         atomic_write_json(run_dir / "run.json", metadata)
     if args.json:
-        print(json.dumps({"suggested_risk": risk, "reasons": reasons, "paths": paths}, indent=2, ensure_ascii=False))
+        print(json.dumps({"suggested_risk": risk, "execution_mode": execution_mode(risk), "reasons": reasons, "paths": paths}, indent=2, ensure_ascii=False))
     else:
-        print(f"suggested risk: {risk}")
+        print(f"suggested risk: {risk}; execution mode: {execution_mode(risk)}")
         for reason in reasons[:15]:
             print(f"  - {reason}")
         print("Confirm or raise it; lowering it needs an explicit reason in the report.")

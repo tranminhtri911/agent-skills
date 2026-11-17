@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Install / remove the skill gate for Claude Code (user scope, idempotent).
 
-Normally installed together with the skills: `python3 agent-skills.py install`
-(`--without-skill-gate` skips it, `uninstall` removes it). This script does only the gate:
+Opt in with `python3 agent-skills.py install --with-skill-gate`
+(`uninstall` removes it). This script does only the gate:
 
     python3 tools/skill-gate/install.py            # install or update
     python3 tools/skill-gate/install.py --dry-run  # show what would change
@@ -146,11 +146,13 @@ def apply(install=True, dry_run=False, claude_dir=None, log=print):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--project", help="project root; default is explicitly requested user scope")
     ap.add_argument("--uninstall", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     try:
-        apply(install=not args.uninstall, dry_run=args.dry_run)
+        apply(install=not args.uninstall, dry_run=args.dry_run,
+              claude_dir=os.path.join(os.path.abspath(args.project), ".claude") if args.project else None)
     except RuntimeError as exc:
         raise SystemExit(str(exc))
 

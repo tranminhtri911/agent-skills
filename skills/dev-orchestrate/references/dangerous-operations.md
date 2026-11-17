@@ -1,4 +1,4 @@
-# Authorization and operations (OPS-001 … OPS-013)
+# Authorization and operations (OPS-001 … OPS-014)
 
 Carry out the requested task and necessary supporting work. Authorization and preferences persist across turns. Local work does not need per-command confirmation; cloud access and every non-local database operation have the explicit approval requirements below.
 
@@ -7,6 +7,18 @@ Carry out the requested task and necessary supporting work. Authorization and pr
 Read, copy, convert, transform, export and update local data directly when needed for the task. Run local builds/tests and clean artifacts created for the task. Local development DB changes, resets, rollbacks and disposable Docker volume cleanup can proceed when included in the user's request or necessary for an isolated test.
 
 Determine the actual target from the command and available configuration without printing secrets. Preserve unrelated files, developer changes and data. Do not request a dangerous-command confirmation for local operations within the task, including data processing, DB resets, migrations and cleanup.
+
+## Deciding whether a target is local (OPS-014)
+
+The text of a command does not prove where it acts. Before a destructive or data-changing command, classify its affected target, without printing secrets and without connecting to an unknown target to find out:
+
+| Class | Evidence | Action |
+| --- | --- | --- |
+| Proven local | Paths resolve (symlinks followed) inside the workspace or another in-scope folder on a local filesystem (not an NFS/SMB/AFP/WebDAV or other network mount); a DB host of `localhost`/socket whose listening port belongs to a local server process or local container (not `ssh`, `kubectl port-forward`, `cloud-sql-proxy`, SSM or another tunnel); Docker with no `DOCKER_HOST` and a local context; Kubernetes only for kind/minikube/docker-desktop contexts | Ordinary local work: proceed within the task |
+| Non-local | `ssh`, `scp`, `rsync host:`, cloud CLIs/SDKs, `terraform apply`, `git push`, remote Kubernetes/Docker contexts, a DB host other than localhost, a localhost port held by a tunnel, a network mount | OPS-011/012 or the dangerous-command rule below |
+| Unknown | Indirect commands whose target lives elsewhere (`npm run`, `make`, shell scripts, `manage.py`, `artisan`, `rake`), or a target taken from environment variables or config files that may not be the ones loaded | Read the script, settings and env files that run (redacting secrets) to resolve it; still unknown → treat as non-local and ask |
+
+Resolve before acting: read the script a task runner calls, the settings/`.env` the framework actually loads, the mount type of the path (`mount`, `df`) and the process holding a local DB port (`lsof -iTCP:<port> -sTCP:LISTEN`). These are local reads and need no approval; querying the target itself does. A countdown or timeout that proceeds without a reply is acceptable only for proven-local operations, as a cancel window the user asked for; for non-local or unknown targets it is not consent (OPS-013).
 
 ## Cloud access: warn and wait for approval (OPS-011)
 
@@ -52,6 +64,7 @@ Before asking, check whether the conversation already authorizes the same enviro
 | OPS-011 | Any cloud connection or use of cloud credentials | Warn and wait for explicit approval covering the exact actions and targets, including read-only, identity, login and connection checks. |
 | OPS-012 | Every non-local database connection or operation | Warn and wait for explicit approval covering the exact actions and targets, including reads, schema/plans, health checks and backups, through direct or indirect access. |
 | OPS-013 | Presentation of required approval requests | Use a supported interactive confirmation tool with a short icon/action/environment title and exact operation details; refusal first, explicit scoped approval second. Await the actual reply. |
+| OPS-014 | Classifying the target of a destructive or data-changing command | Proven local proceeds; non-local follows OPS-011/012; unknown is resolved from scripts/config/mounts/port owners, otherwise treated as non-local. A timeout never approves a non-local or unknown target. |
 
 Keep existing user restrictions on AWS/Azure, production, real payments, secret transmission and remote load tests. Tests continue to use isolated resources, environment allowlists and network restrictions. These test controls do not require an approval prompt for ordinary local work.
 

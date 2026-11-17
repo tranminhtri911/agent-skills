@@ -495,6 +495,12 @@ def execute_check(
         return result, [f"run-tests: blocked, executable not found: {argv[0]}"]
 
     wrapper, enforcement = plan_network_enforcement(network_mode, allowed_hosts)
+    if profile_name != "unit_offline" and not wrapper:
+        result = CheckResult(check_id=check_id, tool="devskills.run-tests", execution_status=EXEC_NOT_RUN,
+                             gate_result=GATE_BLOCKED, domain_result="network_isolation_unavailable",
+                             summary="OS network isolation unavailable for this profile; nothing was executed",
+                             details={**base_details, "network_enforcement": enforcement}, started_at=started_at)
+        return result, ["run-tests: BLOCKED: Python socket guard is partial; use OS-isolated local execution"]
     if network_mode != "allow":
         python_path = added_variables.get("PYTHONPATH")
         environment["PYTHONPATH"] = str(NETGUARD_DIR) + (os.pathsep + python_path if python_path else "")

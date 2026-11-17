@@ -522,6 +522,7 @@ def build_context_map(repo_root: Path, keywords: list[str], max_files: int) -> d
         "instructions_to_read_first": instructions,
         "stack": detect_stack(repo_root, files),
         "lint_configs": lint_configs,
+        "style": _detect_style(repo_root, files),
         "conventions": detect_conventions(cached_texts, [item.path for item in top_files], pattern),
         "secret_files_not_read": secret_files_seen[:50],
         "feature": {
@@ -555,6 +556,13 @@ def build_context_map(repo_root: Path, keywords: list[str], max_files: int) -> d
             "risk": None,
         },
     }
+
+
+def _detect_style(repo_root: Path, files: list[str]) -> dict[str, Any]:
+    """Code-style references per project root; imported here because style_routing builds on detect_stack."""
+    from devskills.style_routing import detect_style
+
+    return detect_style(repo_root, files)
 
 
 def _attach_callers(symbols: list[SymbolInfo], cached_texts: dict[str, str]) -> None:
@@ -643,6 +651,10 @@ def render_markdown(context_map: dict[str, Any]) -> str:
         lines.append(f"- test commands: {'; '.join(stack['test_commands'][:6])}")
     if context_map["secret_files_not_read"]:
         lines.append(f"- secret files present (not read): {', '.join(context_map['secret_files_not_read'][:5])}")
+    for style_root in (context_map.get("style") or {}).get("roots", []):
+        if style_root["references"]:
+            tools = f"; style tools: {', '.join(style_root['style_tools'])}" if style_root["style_tools"] else ""
+            lines.append(f"- code-style for `{style_root['root']}`: {', '.join(style_root['references'])}{tools}")
     if context_map.get("conventions"):
         lines.extend(render_conventions(context_map["conventions"]))
     if context_map.get("code_graph"):

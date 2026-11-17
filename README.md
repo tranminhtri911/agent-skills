@@ -1,6 +1,6 @@
 # devskills: software development skills for AI coding agents
 
-A suite of 16 skills (Agent Skills / Claude Code) and a stdlib-only Python runtime (`ds.py`). The runtime turns important rules into evidence-based checks: understand code before editing, write maintainable code, protect databases/money/batches, test with isolated simulators, capture screenshots with baselines, review security, and **work within the user's authorization without repeated prompts for local tasks**.
+A suite of 17 skills (Agent Skills / Claude Code) and a stdlib-only Python runtime (`ds.py`). The runtime turns important rules into evidence-based checks: understand code before editing, write maintainable code, protect databases/money/batches, test with isolated simulators, capture screenshots with baselines, review security, and **work within the user's authorization without repeated prompts for local tasks**.
 
 Never fabricate data, code/APIs, sources, or results. Support important claims with inspected evidence, distinguish assumptions/mocks from reality, and label unverified work. Do requested work and necessary supporting changes; ask before extras. `trace` verifies tests only against exact passing testcases in reports; unexecuted, skipped, or unidentified tests remain `unverified`. Any unparseable file in a JUnit report set makes the runner `blocked`.
 
@@ -72,31 +72,23 @@ Precedence:
 
 The suite **never runs `codegraph init`/`index` automatically**: creating the index/file watcher is your choice. CodeGraph is not bundled. Add `--with-codegraph` to install/update to obtain the latest release (`npm install -g @colbymchenry/codegraph@latest`, without sudo). CodeGraph's README describes anonymous usage telemetry without code/filenames; use `codegraph telemetry off` when project agreements require it.
 
-## Default UI reference: ui-ux-pro-max
+## Optional UI reference: ui-ux-pro-max
 
-[ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) is installed **by default** through its official CLI using the latest release:
-
-```bash
-python3 agent-skills.py install                          # install skills + ui-ux-pro-max
-python3 agent-skills.py update                           # update ui-ux-pro-max to latest
-python3 agent-skills.py install --without-ui-ux-pro-max  # skip it
-```
-
-- Missing `npx`/offline: warn and use built-in checklists. Explicit `--with-ui-ux-pro-max` makes installation failure fatal.
-- The installer runs `npx -y ui-ux-pro-max-cli@latest init --ai <...> --force`, adding `--global` for user targets.
-- `claude-user` installs under `~/.claude/skills/ui-ux-pro-max`; `claude-project` uses project `.claude/skills/`; `agents` uses `--ai universal`; `codex` uses `--ai codex`.
-- Existing copies are backed up for rollback. Uninstall leaves this skill installed.
-
-`implement-frontend` consults it **for every new screen/page/component or layout change**: layout, style, palette, typography, themes, UX, accessibility. Project design systems/tokens/components take precedence (CTX-009); it never restyles existing screens unasked. Default components use [shadcn/ui](https://ui.shadcn.com/), retaining an existing project kit instead. Follow requested devices; defaults are mobile + laptop for web and iOS + Android for mobile apps (tablet when requested). Light / Dark / System themes apply to existing themed projects, new apps, or requested dark mode. `verify-ui` reviews new/changed screens using its UX/accessibility guidance and captures light/dark where supported. `status` and `ds.py doctor` report availability.
-
-**For repository developers** (test/lint with locked versions):
+Default install/update performs no third-party UI installation and adds no skill-gate hooks. To install the UI reference, first review the CLI release and its npm provenance, then supply its exact version:
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -e ".[ui,imaging,pdf,dev]" -c requirements-lock.txt
-.venv/bin/python -m playwright install chromium
-.venv/bin/python -m unittest discover -s tests -t .
+python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z
 ```
+
+`X.Y.Z` is a placeholder for the reviewed release, not a shipped pin. The installer accepts numeric releases only and uses `https://registry.npmjs.org`; it does not verify package provenance itself or pin transitive dependencies. Existing copies require explicit `--force` and are backed up. No package was downloaded to validate this change. `--without-ui-ux-pro-max` remains compatible. CodeGraph remains separately opt-in via `--with-codegraph`.
+
+Skill gate is Claude-specific and separately opt-in. Prefer project scope:
+
+```bash
+python3 agent-skills.py install --target claude-project --with-skill-gate
+```
+
+Shared rules and self-contained skills still support Codex/other agents without Claude hooks. See [checklist audit](docs/checklist-audit.md) for verified fixes and remaining proposals.
 
 ## Skills
 
@@ -105,7 +97,8 @@ python3 -m venv .venv
 | `dev-orchestrate` | Code changes: R0–R3, gates, rosters, final reports, authorization boundaries; preparing commits under the user's identity without AI attribution |
 | `discover-codebase` | Understand entrypoints, callers, classes/functions/variables, DB tables, effects, tests |
 | `design-change` | Senior recommendations: options, tradeoffs, risks, recovery; plans/specs in `docs/` |
-| `write-maintainable-code` | Naming, language-correct comments/docstrings (`/* */` or `#`), structure, errors |
+| `write-maintainable-code` | Comments/docstrings in the repository's style, structure, errors, no hard-coding, changing existing code safely |
+| `code-style` | Explicit over short: naming and layout per language (Python, TS/JS, Java, Kotlin, C#, PHP, Go, Swift, Dart, SQL) and framework (Django, FastAPI, React/Next, Vue, Angular, NestJS, Spring, Android/Compose, ASP.NET Core, Laravel, SwiftUI, Flutter); patterns by signal |
 | `implement-backend` | Router → service → repository feature modules, jobs/batches, uploads, external clients |
 | `design-api` | Contracts, required endpoint samples/`curl` (API-011), errors, pagination, versions, idempotency, webhooks |
 | `implement-frontend` | Feature screens/components, UI states, accessibility, cleanup |

@@ -1,6 +1,6 @@
 ---
 name: change-database
-description: "Use when analyzing, specifying, reviewing or changing anything that reads or writes a database — tables, keys, columns, indexes, migrations, queries, ORM models or repositories, deleting data, transactions, locks, long transactions, multi-step CRUD that must roll back together, or connection pools. Triggers (vi): xóa dữ liệu, thêm/sửa bảng hoặc cột, index, truy vấn, migration, giao dịch, khóa bản ghi, sao lưu/khôi phục, danh sách, báo cáo, CRUD. Applies even when the request is phrased as a question (\"làm sao…\", \"có thể … không?\"); load it together with dev-orchestrate, not after it."
+description: "Use when analyzing, specifying, reviewing or changing anything that reads or writes a database — tables, keys, columns, indexes, migrations, queries, ORM models or repositories, deleting data, transactions, locks, long transactions, multi-step CRUD that must roll back together, or connection pools. Triggers (vi): xóa dữ liệu, thêm/sửa bảng hoặc cột, index, truy vấn, migration, giao dịch, khóa bản ghi, sao lưu/khôi phục, danh sách, báo cáo, CRUD. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
   version: "1.0.0"
   suite: devskills
@@ -8,7 +8,7 @@ metadata:
 
 # Change Database
 
-Correct data first, then contention and speed. Atomic units of work with automatic rollback, short transactions, indexes justified by real queries, schemas that scale and evolve safely — and the project default of **no new database foreign keys**, with integrity designed explicitly instead.
+Correct data first, then contention and speed. Atomic units of work with automatic rollback, short transactions, indexes justified by real queries, schemas that scale and evolve safely — and explicit referential integrity following the project’s conventions.
 
 `DS` = `python3 "${CLAUDE_SKILL_DIR}/scripts/ds.py"`.
 
@@ -36,9 +36,9 @@ Process in-scope confirmed local data and development databases directly, includ
 - Timestamps with time zone (`created_at`, `updated_at`) when the domain needs audit/sync; `version` column for optimistic locking when used.
 - Soft delete needs uniqueness, filtering, restore and retention rules. Template and naming conventions: [table-design.md](references/table-design.md).
 
-## Foreign keys: discouraged by project policy
+## Foreign keys: project policy (DB-009)
 
-Do not add new DB foreign keys; do not drop existing ones without a migration plan. For every relation without an FK document: the single writer/owner, how parent existence is checked and races with parent deletion are prevented, delete policy, the index on the reference column, and an orphan reconciliation job. Checklist and ORM switches (`db_constraint=False`, `relationMode = "prisma"`, no `constrained()`, …): [fk-free-integrity.md](references/fk-free-integrity.md). For money/ledger/permissions present the FK-vs-no-FK tradeoff to the user.
+Follow existing migrations and `.devskills.toml` `[database].foreign_key_policy`: `allowed` (default), `discouraged`, or `forbidden`. Do not remove existing constraints to match a preference. For new projects prefer database-enforced integrity for relations in the same database; assess migration locks and delete behavior. Projects intentionally avoiding FKs must document the integrity owner, parent-existence and delete races, reference index, deletion policy and orphan reconciliation. See [fk-free-integrity.md](references/fk-free-integrity.md) only for that policy; its examples are not universal defaults. Money/ledger/permissions require an explicit integrity tradeoff.
 
 ## Indexes and query plans (IDX-001…IDX-009)
 
