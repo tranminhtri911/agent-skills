@@ -50,7 +50,7 @@ Say in the hand-over which devices were built and checked; a device that was not
 
 | Target | How |
 | --- | --- |
-| Web | verify-ui: `DS screenshot --viewport mobile --viewport laptop` (default), add `--viewport tablet` / `desktop` when they are targets; both color schemes when the app has themes |
+| Web | Select widths using the `verify-ui` viewport plan. Capture target sizes and the edges of affected breakpoints, including both color schemes when the app has themes. |
 | iOS | Simulator (small phone such as iPhone SE and a large one); `xcrun simctl io booted screenshot ios.png` |
 | Android | Emulator (small ~360 dp and large phone); `adb exec-out screencap -p > android.png` |
 | Tablets | iPad / Android tablet simulator, only when tablets are targets |

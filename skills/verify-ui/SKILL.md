@@ -1,8 +1,8 @@
 ---
 name: verify-ui
-description: "Use when a change affects what users see — taking screenshots, comparing against visual baselines, checking responsive layouts on mobile, tablet and laptop or iOS/Android app screens, loading/error/empty states, console errors or accessibility of a page or component. Triggers (vi): chụp màn hình, so sánh giao diện, kiểm tra UI trên mobile/tablet/laptop, vỡ layout, xuống dòng, lỗi hiển thị. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when verifying UI, reviewing UX or diagnosing broken responsive layouts on existing or changed web, iOS or Android screens, including UI states, accessibility and visual baselines. Triggers (vi): kiểm tra UI, review giao diện, vỡ layout, kiểm tra responsive, xuống dòng, tràn chữ, lỗi hiển thị, chụp màn hình, so sánh giao diện. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   suite: devskills
 ---
 
@@ -12,9 +12,9 @@ Visual evidence must be reproducible and honest: a pinned capture profile, synth
 
 `DS` = `python3 "${CLAUDE_SKILL_DIR}/scripts/ds.py"`.
 
-Review reference: use the `ui-ux-pro-max` skill (installed by default) for its UX/accessibility guidelines (contrast, touch targets, focus, motion, theming) as review items for every new or changed screen; the captured evidence below stays the proof. When it is not installed, say so and review against the implement-frontend checklist.
+**Review guidance (FE-014).** Load `ui-ux-pro-max` before reviewing a rendered UI, diagnosing broken layout or verifying a changed screen. Apply its relevant UX checks, such as reflow, touch targets, focus and contrast, against the project design and acceptance criteria. Include the checks actually applied in the review evidence. If the optional skill is unavailable, report that and continue with the [visual checklist](references/visual-checklist.md).
 
-Devices: capture the target devices from the task. Unspecified web work: `--viewport mobile --viewport laptop` (also the default when no `--viewport` is given); add `tablet` or `desktop` when they are targets. Mobile apps: screenshots from the iOS simulator (`xcrun simctl io booted screenshot`) and the Android emulator (`adb exec-out screencap -p`); a platform without a simulator is `blocked`.
+**Viewport plan (FE-010).** Use the task and project's supported devices and breakpoints first. For new web UI, responsive fixes and layout audits without defined targets, check a narrow phone, tablet, laptop and desktop. Inspect both sides of affected breakpoints and any intermediate width where content starts to wrap. Use the [viewport selection checklist](references/visual-checklist.md#viewport-selection) for sizes and native app checks.
 
 Themes: when the app supports light/dark, capture each changed screen with `--color-scheme light` and `--color-scheme dark` (System is the OS preference, which these two emulate) and check contrast, images and focus rings in both.
 
@@ -34,11 +34,12 @@ Load each with the Skill tool before working on that part; dev-orchestrate route
 
 ```
 DS screenshot --url http://127.0.0.1:3000/checkout --name checkout-pending \
-  --viewport mobile --viewport laptop --wait-for "[data-testid=order-total]" \
+  --viewport 360x800 --viewport tablet --viewport laptop --viewport desktop \
+  --wait-for "[data-testid=order-total]" \
   --locale en-US --timezone UTC [--mask ".clock"] [--full-page] [--run <id>]
 ```
 
-Only local URLs (add `--allow-host` solely for a host the user approved). The capture uses a fresh browser context, blocks requests to non-local hosts (listed in the manifest), disables animations and the caret, waits for fonts, records console and page errors, scans page text for secrets, and writes `<name>-<viewport>.png` plus a JSON manifest (profile id, browser version, viewport, locale, time zone, hashes). Presets: mobile 390×844, tablet 768×1024, laptop 1280×800, desktop 1440×900, or `WIDTHxHEIGHT`; default mobile + laptop.
+Only local URLs (add `--allow-host` solely for a host the user approved). The capture uses a fresh browser context, blocks requests to non-local hosts (listed in the manifest), disables animations and the caret, waits for fonts, records console and page errors, scans page text for secrets, and writes `<name>-<viewport>.png` plus a JSON manifest (profile id, browser version, viewport, locale, time zone, hashes). Pass each planned size explicitly using a preset or `WIDTHxHEIGHT`. With no `--viewport`, the command captures mobile + laptop.
 
 ## Compare with baselines
 

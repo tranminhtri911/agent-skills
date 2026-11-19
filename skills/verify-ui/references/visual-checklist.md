@@ -12,7 +12,12 @@
 | Permission denied | yes | no restricted data rendered |
 | Pending (payments) | yes | "verifying" state, not "failed" |
 
-Viewports: every target device; by default mobile 390×844 and laptop 1280×800, plus tablet 768×1024 or desktop 1440×900 when targeted. Mobile apps: iOS simulator and Android emulator, small and large phone.
+## Viewport selection
+
+- Start with the user-specified scope and the product's supported sizes. Read the affected component's media or container queries and identify where columns stack, actions wrap or navigation changes.
+- For new web UI, responsive fixes and layout audits with no defined targets, inspect a narrow phone (`360x800`), tablet (`768x1024`), laptop (`1280x800`) and desktop (`1440x900`). Also reproduce any specifically reported size. For a routine visible change with no defined targets, start with `mobile` (390×844) and `laptop` (1280×800) and add widths affected by the change. For apps that support narrower phones, include the minimum supported width.
+- For each affected breakpoint, inspect just below and just above it. For example, a 768 px media query can be checked at `767x1024`, `768x1024` and `769x1024`. Resize between representative widths to find content-driven wrapping that falls between CSS breakpoints. For a container query, record the component width as well as the viewport.
+- On native apps, inspect a small and a large phone on each supported platform. Use the iOS simulator (`xcrun simctl io booted screenshot`) and Android emulator (`adb exec-out screencap -p`) where applicable. Include supported tablet and landscape layouts and exercise keyboard and text scaling where they affect the screen. Report unavailable targets as blocked.
 
 ## Layout and wrapping
 

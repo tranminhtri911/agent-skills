@@ -2,7 +2,7 @@
 name: dev-orchestrate
 description: "Use when working on any development task or ticket for an application (backend, frontend, API, database, jobs, infrastructure), in any language — requirements, impact or feasibility, planning or specifying, implementing a feature, bugfix or refactor, tests, review, commit or reporting results. Triggers (vi): làm task, ticket, thêm chức năng, sửa lỗi, triển khai, phân tích tác động, viết spec, test, review, commit, báo cáo kết quả. Repository-specific questions are in scope; pure conceptual questions do not require the implementation workflow. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   suite: devskills
 ---
 
@@ -18,7 +18,9 @@ For repository development, load this router first. Select domain skills from th
 
 - Unfamiliar code → discover-codebase; design choices or R2+ → design-change.
 - SQL/ORM/data integrity → change-database; endpoint contracts → design-api.
-- Server logic → implement-backend; UI → implement-frontend and verify-ui.
+- Server logic → implement-backend.
+- UI implementation → `implement-frontend`. Start routine CRUD with a comparable project screen and reuse its UI conventions (CTX-009). For greenfield UI, a new layout or interaction pattern, or a requested redesign, load `ui-ux-pro-max` before making design decisions (FE-014).
+- Rendered UI verification, UX review, responsive defect diagnosis and UI E2E layout checks → `verify-ui` and `ui-ux-pro-max`, including review-only requests (FE-010, FE-014). Visible changes receive this verification before handover. If `ui-ux-pro-max` is unavailable, record that and use the local visual checklist. Load `implement-frontend` when the task includes a fix or implementation.
 - Remote calls/retries/jobs → design-reliability; concurrency/resource use → review-performance.
 - Trust boundaries/secrets/permissions → review-security; tests → test-safely.
 - Infrastructure → design-infrastructure; source edits → write-maintainable-code and code-style.

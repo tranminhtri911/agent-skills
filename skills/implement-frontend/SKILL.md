@@ -2,7 +2,7 @@
 name: implement-frontend
 description: "Use when building, specifying, reviewing or changing UI screens, pages, components, forms, client-side state, routing, data fetching, responsive layouts or themes in React, Next.js, Vue, Nuxt, Angular, Svelte, or mobile apps in React Native, Expo, Flutter, Jetpack Compose or SwiftUI. Triggers (vi): màn hình, giao diện, trang, component, form, nút, hiển thị, widget, màn hình khóa, responsive, app Android/iOS, dark mode, theme. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   suite: devskills
 ---
 
@@ -14,7 +14,7 @@ One folder per feature/screen, components split by responsibility, every UI stat
 
 **Start from the project's base (CTX-009).** Reuse the project's API client/repository layer, custom hooks (`useAppContext`, query hooks), shared components and design tokens, form and validation library, routing and state conventions; copy the reference screen of the same kind. Never add a second HTTP client, state library or component kit. Statuses, roles and option lists come from the project's constants module or generated API types, labels from i18n (CODE-011). Follow the source's data flow (page → hook → repository/API layer, as `patterns in use` shows); a custom hook only for logic shared or isolated for testing, no new store or wrapper layer without a named problem (DES-007). Which actions a status allows comes from the API, not re-implemented rules (BE-011).
 
-**UI design reference: ui-ux-pro-max (default).** Before creating any screen, page or component, and before changing a layout, consult the `ui-ux-pro-max` skill (installed with the suite by default) for the stack's layout, style, palette, typography, spacing, theming, UX and accessibility guidelines; also use it to review states, forms and responsive behavior of screens you change. It is a reference, not an authority: the project's existing design system, tokens and components win (CTX-009), its suggestions are built with the project's component kit, and it never restyles existing screens unasked. When it is not installed, say so in one line (`python3 agent-skills.py update` installs it) and use [frontend-checklist.md](references/frontend-checklist.md).
+**UI design and review (FE-014).** For routine CRUD, inspect and reuse a comparable list, form or detail screen, its shared components, tokens and interaction patterns (CTX-009). For greenfield UI, a new layout or interaction pattern, or a requested redesign, load `ui-ux-pro-max` before making design decisions. Apply relevant product, layout, typography and accessibility guidance within the existing design system and requested scope. During visual verification of any changed screen, use `ui-ux-pro-max` with `verify-ui`, including CRUD screens. If the optional skill is unavailable, report that and use [frontend-checklist.md](references/frontend-checklist.md) for design and the `verify-ui` checklist for review.
 
 **Component style: shadcn/ui (default).** New UI is built from [shadcn/ui](https://ui.shadcn.com/) components (Radix primitives + Tailwind, added with `npx shadcn@latest add <component>` into `components/ui`, then owned by the project) and its CSS-variable theme. Projects that already use shadcn/ui extend it: reuse `components/ui`, compose new components from it, add missing ones with the CLI rather than writing look-alikes. Projects with another component kit keep it (CTX-009: never a second kit, no migration unasked). Other stacks use the shadcn port when the project has no kit: Vue `shadcn-vue`, Svelte `shadcn-svelte`, Angular `spartan/ui`, React Native `react-native-reusables`, Flutter `shadcn_ui`. Setup, theming and rules: [shadcn-ui.md](references/shadcn-ui.md).
 
@@ -66,7 +66,7 @@ Framework notes and examples: [frontend-checklist.md](references/frontend-checkl
 
 ## Verify
 
-`DS native-checks --execute --run <id>` runs the project's own linter, type checker, build and framework checks (primary evidence; `check-code` is a supporting layer). `DS check-code` flags effects without cleanup, raw HTML sinks, `any`, tokens in localStorage, missing docs on exported functions. Visual evidence for changed screens on each target device: verify-ui (`DS screenshot …`, default mobile + laptop; mobile apps from the iOS simulator and Android emulator). Behavior tests with the repo's runner via test-safely. Browser tests never replace server-side authorization tests.
+`DS native-checks --execute --run <id>` runs the project's own linter, type checker, build and framework checks (primary evidence; `check-code` is a supporting layer). `DS check-code` flags effects without cleanup, raw HTML sinks, `any`, tokens in localStorage, missing docs on exported functions. Use the `verify-ui` viewport plan for rendered checks on each changed screen. Use the repo's runner via `test-safely` for behavior tests. Browser tests never replace server-side authorization tests.
 
 Request races, tenant switch/logout during fetch, optimistic rollback, keyboard/focus and axe-core: [verification-frontend.md](references/verification-frontend.md). Components, forms, state, data fetching and cache with React/TS examples: [frontend-patterns.md](references/frontend-patterns.md).
 

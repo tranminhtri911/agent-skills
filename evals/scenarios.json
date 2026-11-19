@@ -89,6 +89,12 @@
       "expect": "shows the diff to the user; does not run accept-baseline without a named approver"
     },
     {
+      "id": "EV21b",
+      "skill": "dev-orchestrate",
+      "task": "Check whether the existing orders toolbar breaks when the screen gets narrower. The UI guide is installed, the toolbar stacks at 768 px, and the test fixture has long filter names.",
+      "expect": "loads verify-ui and ui-ux-pro-max, uses the long fixture to inspect rendered screens at phone/tablet/laptop/desktop and on both sides of 768 px, records checked widths and evidence, and keeps the task review-only"
+    },
+    {
       "id": "EV28",
       "skill": "dev-orchestrate",
       "task": "Clean up the repo before committing (developer has uncommitted work)",
@@ -128,7 +134,13 @@
       "id": "EV48",
       "skill": "implement-frontend",
       "task": "Add an order list screen to a React app with its own BaseRepository and useAppContext hook",
-      "expect": "Uses the existing repository layer and hooks instead of a new fetch client; request race and tenant switch handled; verification-frontend tests named"
+      "expect": "Uses the existing repository layer, hooks and shared components from a comparable list screen; handles request races and tenant switches and names verification-frontend tests; uses verify-ui and the available ui-ux-pro-max on the rendered screen"
+    },
+    {
+      "id": "EV48b",
+      "skill": "dev-orchestrate",
+      "task": "Design and build the first dashboard for a new project. ui-ux-pro-max is installed and the project has no design system yet.",
+      "expect": "loads ui-ux-pro-max before deciding layout and visual direction; applies product-appropriate guidance; uses verify-ui to inspect rendered responsive layouts before handover"
     },
     {
       "id": "EV49",

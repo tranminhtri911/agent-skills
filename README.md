@@ -36,7 +36,7 @@ python3 agent-skills.py guard --remove       # existing installs: remove the leg
 | Screenshots, fast image comparisons, PDFs, isolation from global/project Python environments | `python3 agent-skills.py install --with-venv` |
 | Selected optional features | `python3 agent-skills.py install --with-venv --extras ui` (`ui`, `imaging`, `pdf`) |
 | Latest CodeGraph | `python3 agent-skills.py install --with-codegraph` |
-| Skip the default [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) UI reference | `python3 agent-skills.py install --without-ui-ux-pro-max` |
+| Install the optional UI reference at a reviewed version | `python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z` |
 | Remove the virtualenv too | `python3 agent-skills.py uninstall --remove-venv` |
 
 With `--with-venv`:
@@ -95,7 +95,7 @@ The skill gate is installed by default (`--without-skill-gate` opts out): enforc
 | `code-style` | Explicit over short: naming and layout per language (Python, TS/JS, Java, Kotlin, C#, PHP, Go, Swift, Dart, SQL) and framework (Django, FastAPI, React/Next, Vue, Angular, NestJS, Spring, Android/Compose, ASP.NET Core, Laravel, SwiftUI, Flutter); patterns by signal |
 | `implement-backend` | Router → service → repository feature modules, jobs/batches, uploads, external clients |
 | `design-api` | Contracts, required endpoint samples/`curl` (API-011), errors, pagination, versions, idempotency, webhooks |
-| `implement-frontend` | Feature screens/components, UI states, accessibility, cleanup |
+| `implement-frontend` | Reuse project UI for routine CRUD and consult `ui-ux-pro-max` when available for new designs |
 | `change-database` | Tables, indexes, query plans for large data (safe EXPLAIN per engine), transactions/rollback, locks, migrations, pools; limited FKs with integrity |
 | `review-performance` | Threads/pools/async, leaks, CPU, N+1, before/after measurements |
 | `design-reliability` | Retries, timeouts, fallbacks, outboxes, compensation, unknown outcomes |
@@ -103,7 +103,7 @@ The skill gate is installed by default (`--without-skill-gate` opts out): enforc
 | `review-code` | Reviewing a diff/PR/MR or your own change: impact-ordered review routed to the domain skills, labeled findings (Conventional Comments), verdict |
 | `design-infrastructure` | AWS/GCP VPCs, subnets, private networking, EC2/GCE, RDS/Cloud SQL, least-privilege IAM; Terraform/CloudFormation; agents never apply |
 | `test-safely` | Money/batch/email/paid-API tests through mocks/simulators, isolated DBs |
-| `verify-ui` | Fixed-profile screenshots, baseline comparisons, human baseline approval |
+| `verify-ui` | Rendered UI and UX review with `ui-ux-pro-max` when available, responsive layout checks around breakpoints, and reviewed screenshot baselines |
 | `index-project-knowledge` | Create/check `.knowledge/INDEX.md` for md/docx/xlsx/pptx/pdf/html/csv |
 
 ## `ds.py` runtime

@@ -602,6 +602,7 @@ Stripe documents duplicate/out-of-order webhooks and recommends signature verifi
 - **FE-010 SHOULD:** Product-appropriate breakpoints; check long text, i18n, timezones, currencies, fallback fonts.
 - **FE-011 SHOULD:** Profile rendering/network behavior; paginate/virtualize large datasets when needed.
 - **FE-012 MUST:** Optimistic updates need rollback/reconciliation and suitable limits; never fake payment success before server confirmation.
+- **FE-014 MUST:** Base routine CRUD on a comparable project screen and its shared components, tokens and workflows (CTX-009). Load the available `ui-ux-pro-max` skill before designing greenfield UI, a new layout or interaction pattern, or a requested redesign. Use it with `verify-ui` for rendered UI verification, UX review and responsive diagnosis, including review-only work. Apply relevant guidance within the project's design system. If the skill is unavailable, record that and use the local frontend and visual checklists.
 
 React documents component/hook purity and Rules of Hooks. WCAG 2.2 defines accessibility criteria; choose a product-appropriate level, with AA as a proposed starting target. Automated scans alone do not establish conformance. [S32][S30]
 
@@ -974,7 +975,7 @@ ARIA snapshots verify accessibility trees, not pixel comparisons; they are disti
 11. Save current, baseline references, diffs, console errors, suitable traces; scan/redact artifacts.
 12. Report behavior, visual, accessibility, overall gate statuses separately.
 
-Browser E2E and UI verification also require inspection of the rendered screens or captured images for the affected scope. Follow `skills/verify-ui/references/visual-checklist.md` for overflow, overlap, clipping, text wrapping, controls moving onto another row, added rows/items and height growth. Use long synthetic content and enough items to trigger reflow or scrolling at target widths and around relevant breakpoints. Check that line breaks, row placement, alignment and spacing follow the existing design and keep actions usable. Record screen/state, viewport, fixture case, screenshot path and findings; identify layout checks not performed. Passing behavior assertions or a baseline comparison alone does not establish layout quality.
+Browser E2E and UI verification also require inspection of the rendered screens or captured images for the affected scope (FE-010, FE-014). Follow `skills/verify-ui/references/visual-checklist.md` for viewport selection, overflow, overlap, clipping, text wrapping, controls moving onto another row, added rows/items and height growth. When target sizes are unspecified, cover a narrow phone, tablet, laptop and desktop for new web UI, responsive fixes and layout audits. Use long synthetic content and enough items to trigger reflow or scrolling at target widths and on both sides of affected breakpoints. Check that line breaks, row placement, alignment and spacing follow the existing design and keep actions usable. Record screen/state, viewport, fixture case, screenshot path and findings. Identify any layout checks not performed. Passing behavior assertions or a baseline comparison alone does not establish layout quality.
 
 Also report unusual UI and UX mismatches with the established product type, target users/roles and business flow, including relevant SaaS workspace/billing context or end-user task clarity. Follow the same checklist's product, user and business fit section. Findings need observed evidence, affected user/task, expected behavior and its source, impact, severity, confidence and a suggested improvement or clarification. Distinguish confirmed defects, concerns needing confirmation and optional improvements, and identify pre-existing findings separately from regressions. Passing tests do not suppress such findings; reporting them does not authorize unrequested redesigns or business-rule changes.
 
@@ -2067,19 +2068,19 @@ Reference: `write-maintainable-code/references/changing-existing-code.md`.
 
 For every maintenance/update/refactor of existing logic, record preserved cases versus explicitly requested differences, with source locations and before/after evidence. Old code defines the baseline for unchanged behavior; specs support the review and discrepancies must be reported rather than silently corrected. Include boundary inputs, outputs/errors, state transitions, side-effect order/count and transaction/retry behavior where relevant. Refactors preserve all behavior; bugfixes change only authorized defects. Missing baseline execution remains unverified even if source comparison or current tests pass.
 
-**38.11 Optional tools use latest releases.** `install`/`update` include optional-tool flags. No sudo; commands appear in dry runs. Failures are explicit: skills still install, with exit code 1 for required optional-tool failures.
+**38.11 Optional tools.** `install`/`update` include opt-in flags. Commands appear in dry runs. Skills still install if an optional tool fails, and the installer reports the failure with exit code 1.
 
 | Flag | Executed command | Notes |
 | --- | --- | --- |
 | `--with-codegraph` | `npm install -g @colbymchenry/codegraph@latest` | Never runs `codegraph init`. |
-| Default (disable with `--without-ui-ux-pro-max`) | `npx -y ui-ux-pro-max-cli@latest init --ai <claude\|universal\|codex> --force` | User targets add `--global`; project targets use project CWD. Installation failure warns unless `--with-ui-ux-pro-max` is explicit. |
+| `--with-ui-ux-pro-max --ui-ux-version X.Y.Z` | `npx -y --registry=https://registry.npmjs.org ui-ux-pro-max-cli@X.Y.Z init --ai <claude\|universal\|codex>` | User targets add `--global`. Project targets use project CWD. Replacing an existing skill requires explicit `--force`. |
 
 ui-ux-pro-max:
 
 - Back up existing copies; rollback restores; uninstall leaves it installed.
 - `--target-dir` lacks a `uipro` mapping, so prints instructions.
 - `status`/`ds.py doctor` report both tools.
-- `implement-frontend` consults it for new screens/requested redesigns; project design systems take precedence. `verify-ui` uses its UX/accessibility guidance for extra review.
+- `implement-frontend` and `verify-ui` apply FE-014 for design and review. Use the local checklists if the skill is unavailable.
 
 Checked on npm 2026-10-28: ui-ux-pro-max-cli 2.15.0, @colbymchenry/codegraph 1.6.2 (installed version then: 1.2.0).
 

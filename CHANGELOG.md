@@ -2,6 +2,11 @@
 
 Every committed change bumps the suite version by one patch step (1.0.0 → 1.0.1 → 1.0.2) in `pyproject.toml`, `src/devskills/__init__.py`, every `skills/*/SKILL.md` `metadata.version` and a section below; `SuiteVersionTest` fails when they disagree.
 
+## 1.0.2 (2026-11-19)
+
+- Route new UI design and rendered UI review to the available UI/UX skill, with responsive checks around affected breakpoints.
+- Remove the GitHub Actions regression workflow.
+
 ## 1.0.1 (2026-11-17)
 
 - Select skills by actual scope; add workflow modes and move Strict instructions to a reference.

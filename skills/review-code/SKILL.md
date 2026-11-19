@@ -2,7 +2,7 @@
 name: review-code
 description: "Use when reviewing a diff, pull request, merge request, commit, patch or a teammate's or AI-generated change, when asked to review or re-check a task before merge or handover, or when self-reviewing your own change before reporting it done. Triggers (vi): review code, review PR/MR, xem diff, kiểm tra lại trước khi merge, tự review, góp ý review. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   suite: devskills
 ---
 

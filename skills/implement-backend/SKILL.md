@@ -2,7 +2,7 @@
 name: implement-backend
 description: "Use when implementing, specifying, reviewing or changing server-side code — HTTP handlers, controllers, services, use cases, repositories, background jobs, batch processing, schedulers, file uploads or clients for external APIs — in any framework (FastAPI, Django, Flask, NestJS, Express, Laravel, Spring, ASP.NET). Triggers (vi): backend, API, logic nghiệp vụ, service, repository, job nền, batch, cron, upload file, xử lý nền. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   suite: devskills
 ---
 

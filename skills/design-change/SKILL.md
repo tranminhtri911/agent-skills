@@ -2,7 +2,7 @@
 name: design-change
 description: "Use when a change has more than one reasonable approach, touches API contracts, database schema, auth, money, concurrency or external providers (risk R2-R3), or when the user asks for a senior recommendation, tradeoffs, feasibility, a technical proposal, a plan, a backlog or a spec, including for a ticket. Triggers (vi): đề xuất phương án, khả thi, đánh giá tác động, thiết kế, lên kế hoạch, spec, chia task, ước lượng, tính năng mới. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   suite: devskills
 ---
 
