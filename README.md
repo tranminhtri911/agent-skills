@@ -95,7 +95,7 @@ The skill gate is installed by default (`--without-skill-gate` opts out): enforc
 | `code-style` | Explicit over short: naming and layout per language (Python, TS/JS, Java, Kotlin, C#, PHP, Go, Swift, Dart, SQL) and framework (Django, FastAPI, React/Next, Vue, Angular, NestJS, Spring, Android/Compose, ASP.NET Core, Laravel, SwiftUI, Flutter); patterns by signal |
 | `implement-backend` | Router → service → repository feature modules, jobs/batches, uploads, external clients |
 | `design-api` | Contracts, required endpoint samples/`curl` (API-011), errors, pagination, versions, idempotency, webhooks |
-| `implement-frontend` | Reuse project UI for routine CRUD and consult `ui-ux-pro-max` when available for new designs |
+| `implement-frontend` | Reuse project UI for development and maintenance. Consult the available `ui-ux-pro-max` for design decisions where the project lacks a suitable pattern. |
 | `change-database` | Tables, indexes, query plans for large data (safe EXPLAIN per engine), transactions/rollback, locks, migrations, pools; limited FKs with integrity |
 | `review-performance` | Threads/pools/async, leaks, CPU, N+1, before/after measurements |
 | `design-reliability` | Retries, timeouts, fallbacks, outboxes, compensation, unknown outcomes |

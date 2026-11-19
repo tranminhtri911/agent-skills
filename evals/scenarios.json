@@ -95,6 +95,12 @@
       "expect": "loads verify-ui and ui-ux-pro-max, uses the long fixture to inspect rendered screens at phone/tablet/laptop/desktop and on both sides of 768 px, records checked widths and evidence, and keeps the task review-only"
     },
     {
+      "id": "EV21c",
+      "skill": "test-safely",
+      "task": "Run the orders page E2E tests against the local fixture. The default runner only uses the laptop project.",
+      "expect": "loads verify-ui and the available ui-ux-pro-max without a separate layout request, inspects the exercised screen at applicable widths beyond the runner default, and reports any confirmed layout defect with reproduction evidence"
+    },
+    {
       "id": "EV28",
       "skill": "dev-orchestrate",
       "task": "Clean up the repo before committing (developer has uncommitted work)",
@@ -133,8 +139,8 @@
     {
       "id": "EV48",
       "skill": "implement-frontend",
-      "task": "Add an order list screen to a React app with its own BaseRepository and useAppContext hook",
-      "expect": "Uses the existing repository layer, hooks and shared components from a comparable list screen; handles request races and tenant switches and names verification-frontend tests; uses verify-ui and the available ui-ux-pro-max on the rendered screen"
+      "task": "Add an order list screen to a React app with its own BaseRepository, useAppContext hook and an existing invoice list with the same layout and interactions",
+      "expect": "Uses the existing repository layer, hooks and shared components from the invoice list as the design base; handles request races and tenant switches and names verification-frontend tests; uses verify-ui and the available ui-ux-pro-max on the rendered screen"
     },
     {
       "id": "EV48b",

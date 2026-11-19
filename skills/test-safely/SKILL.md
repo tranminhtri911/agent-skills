@@ -2,7 +2,7 @@
 name: test-safely
 description: "Use when planning, writing or running tests, test scripts or test data (SQL seeds, e2e), reproducing a bug, or verifying a change — especially anything touching money or payments, batch jobs, emails/SMS/push, paid or third-party APIs, production-like data, load or performance tests, migrations, or shared servers. Triggers (vi): viết test, chạy test, unit test, e2e, mock, dữ liệu giả, tái hiện lỗi, kiểm thử thanh toán/batch/email. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.2"
+  version: "1.0.3"
   suite: devskills
 ---
 
@@ -18,7 +18,7 @@ Load each with the Skill tool before working on that part; dev-orchestrate route
 
 - Tests that prove transactions, locks, deletes or migrations (real isolated engine, never a mocked DB) → **REQUIRED:** change-database.
 - Payment, email or external-provider failure paths → **REQUIRED:** design-reliability.
-- Browser E2E layout checks, screenshots or visual baselines → **REQUIRED:** `verify-ui`, which routes to the available `ui-ux-pro-max` for UX review.
+- Any UI E2E run, screenshots or visual baselines → **REQUIRED:** `verify-ui`, which routes to the available `ui-ux-pro-max` for UX review.
 
 ## Profiles
 
@@ -58,7 +58,7 @@ Mocks prove interactions; fakes prove simple domain behavior; stateful simulator
 
 Test selection, required cases and examples: [test-matrix.md](references/test-matrix.md). With the optional CodeGraph integration, start from the graph's list of affected tests: `code_graph.affected_tests` in the context map from `DS inspect`, or `codegraph affected --json <changed files>`. Then add the tests the risk level requires; an empty list means "no covering test found", not "nothing to test".
 
-For browser E2E or UI verification, use `verify-ui` to inspect affected screens for broken layout, text wrapping, controls moving to another row and added rows/items at target widths. Include long content and enough synthetic items to trigger wrapping or scrolling where relevant. Passing clicks/text assertions does not establish layout quality; report behavior results and the layout inspection evidence separately, including any layout checks not performed.
+For every UI E2E run, include a rendered layout check for the screens and states exercised, even if the request only says to run E2E. Use `verify-ui` and the available `ui-ux-pro-max` to check for horizontal overflow, overlap, clipping, text wrapping, controls moving to another row and added rows/items at target widths and affected breakpoints. Use targeted DOM assertions where the expected layout can be expressed reliably, and open the rendered screen or captures to judge visual reflow. During implementation, reproduce and fix confirmed layout regressions within the task scope and rerun the failing case and nearby widths. In a test-only run, record the defect and reproduction evidence. Include long content and enough synthetic items to trigger wrapping or scrolling where relevant. Passing clicks/text assertions does not establish layout quality; report behavior results and the layout inspection evidence separately, including any layout checks not performed.
 
 Also report unusual UI or UX that conflicts with the established product context, target users/roles or business flow (for example SaaS workspace/billing context or end-user task clarity). Include evidence, user impact and a suggested improvement or clarification; distinguish confirmed defects from uncertain concerns and optional suggestions. Report these findings even when tests pass, without expanding the task into an unrequested redesign or business-rule change.
 

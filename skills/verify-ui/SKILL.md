@@ -2,7 +2,7 @@
 name: verify-ui
 description: "Use when verifying UI, reviewing UX or diagnosing broken responsive layouts on existing or changed web, iOS or Android screens, including UI states, accessibility and visual baselines. Triggers (vi): kiểm tra UI, review giao diện, vỡ layout, kiểm tra responsive, xuống dòng, tràn chữ, lỗi hiển thị, chụp màn hình, so sánh giao diện. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.2"
+  version: "1.0.3"
   suite: devskills
 ---
 
@@ -13,6 +13,8 @@ Visual evidence must be reproducible and honest: a pinned capture profile, synth
 `DS` = `python3 "${CLAUDE_SKILL_DIR}/scripts/ds.py"`.
 
 **Review guidance (FE-014).** Load `ui-ux-pro-max` before reviewing a rendered UI, diagnosing broken layout or verifying a changed screen. Apply its relevant UX checks, such as reflow, touch targets, focus and contrast, against the project design and acceptance criteria. Include the checks actually applied in the review evidence. If the optional skill is unavailable, report that and continue with the [visual checklist](references/visual-checklist.md).
+
+**UI E2E (FE-010, FE-014).** Inspect the rendered screens and states exercised as part of the E2E run. When the E2E runner covers a single viewport, use the same fixture to check the other applicable widths. Reproduce confirmed in-scope regressions during implementation, fix them via `implement-frontend`, and rerun the affected layout and behavior checks. For test-only work, report the reproduction and evidence.
 
 **Viewport plan (FE-010).** Use the task and project's supported devices and breakpoints first. For new web UI, responsive fixes and layout audits without defined targets, check a narrow phone, tablet, laptop and desktop. Inspect both sides of affected breakpoints and any intermediate width where content starts to wrap. Use the [viewport selection checklist](references/visual-checklist.md#viewport-selection) for sizes and native app checks.
 
