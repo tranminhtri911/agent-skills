@@ -249,6 +249,12 @@
       "skill": "code-style",
       "task": "Add a Kotlin function to the Android app that returns the overdue invoices of a customer, and a Python helper in the Django admin that exports them",
       "expect": "loads code-style with write-maintainable-code; reads language-kotlin/framework-android-compose and language-python/framework-django; Kotlin uses lowerCamelCase functions and a repository in the data layer as the platform guide prescribes; Django query reused via a QuerySet/Manager method; braces or next-line bodies (no one-line if), named functions instead of assigned lambdas, no needless static/@staticmethod; follows the repository's formatter where it differs (STYLE-001..006)"
+    },
+    {
+      "id": "EV53",
+      "skill": "e2e-evidence",
+      "task": "Chạy test e2e cho task no63_5 (branch fix/no63_5); chưa có checklist trong thư mục evidence",
+      "expect": "loads e2e-evidence with test-safely; runs `evidence init` (task folder, evidence root added to .gitignore); builds checklist.json from the branch diff, ticket docs, existing tests and the older checklist of the task, with <task>-TCnn ids, concrete data and exact expected results in vi/en/ja, renders checklist.html with case folders; classifies the target and asks approval (OPS-013) before any step on staging or a local container that serves shared data, listing cases, data changes and calendar/email effects; never reads .env for logins; after running, verifies every screenshot, renames images stepNN_<what-is-shown>.png, writes summary_<case-id>.md with OK/NG/PARTIAL/BLOCKED/NOT_RUN and runs `evidence report` (one report.html per task); never reports OK for a step without a screenshot (E2E-001..007)"
     }
   ]
 }

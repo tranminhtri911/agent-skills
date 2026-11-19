@@ -2,7 +2,7 @@
 name: change-database
 description: "Use when analyzing, specifying, reviewing or changing anything that reads or writes a database — tables, keys, columns, indexes, migrations, queries, ORM models or repositories, deleting data, transactions, locks, long transactions, multi-step CRUD that must roll back together, or connection pools. Triggers (vi): xóa dữ liệu, thêm/sửa bảng hoặc cột, index, truy vấn, migration, giao dịch, khóa bản ghi, sao lưu/khôi phục, danh sách, báo cáo, CRUD. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.3"
+  version: "1.0.4"
   suite: devskills
 ---
 

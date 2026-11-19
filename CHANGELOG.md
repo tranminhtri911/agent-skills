@@ -2,6 +2,12 @@
 
 Every committed change bumps the suite version by one patch step (1.0.0 → 1.0.1 → 1.0.2) in `pyproject.toml`, `src/devskills/__init__.py`, every `skills/*/SKILL.md` `metadata.version` and a section below; `SuiteVersionTest` fails when they disagree.
 
+## 1.0.4 (2026-11-19)
+
+- New `e2e-evidence` skill (18th): E2E and manual test runs by checklist leave the same evidence — a vi/en/ja `checklist.html` (left menu, collapsible cases with checkboxes, pages with totals) generated from the branch/prompt when missing, one folder per case with a screenshot per step, `summary_<case-id>.md` with an OK/NG/PARTIAL/BLOCKED/NOT_RUN result, one `report.html` per task — every case OK/NG with its reason and links first, then each case's checklist steps with the recorded result, observation and screenshots — under a gitignored evidence root (rules E2E-001..010, scenario EV53). Learned from a real manual run's evidence folder.
+- `ds.py evidence init|checklist|report`: creates the task folder and the `.gitignore` entry, validates `checklist.json` and renders the checklist with its case folders, and builds the report from case summaries and screenshots (NG fails, missing evidence blocks; folders outside the checklist are listed, not counted). `.devskills.toml [evidence] root` names the evidence root.
+- dev-orchestrate, test-safely and the skill gate route checklist/E2E evidence work to `e2e-evidence`.
+
 ## 1.0.3 (2026-11-19)
 
 - Include responsive layout inspection in every UI E2E run.

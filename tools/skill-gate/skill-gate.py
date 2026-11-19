@@ -34,7 +34,7 @@ ALL_SKILLS = [
     "design-api", "implement-backend", "implement-frontend", "verify-ui",
     "design-reliability", "review-performance", "review-security", "test-safely",
     "design-infrastructure", "write-maintainable-code", "code-style", "index-project-knowledge",
-    "review-code",
+    "review-code", "e2e-evidence",
 ]
 BASE_EDIT = ["dev-orchestrate", "discover-codebase", "write-maintainable-code", "code-style"]
 
@@ -49,7 +49,7 @@ SP_RECEIVE_REVIEW = "superpowers:receiving-code-review"
 SUPERPOWERS = [SP_DEBUG, SP_BRAINSTORM, SP_TDD, SP_PLAN, SP_VERIFY, SP_RECEIVE_REVIEW]
 
 # Needed by the end of the work, not before the first edit (verify after building, review before handover).
-AFTER_WORK = {"verify-ui", "review-code", SP_VERIFY}
+AFTER_WORK = {"verify-ui", "review-code", "e2e-evidence", SP_VERIFY}
 
 
 def superpowers_enabled():
@@ -139,6 +139,12 @@ PROMPT_AREAS = {
         "test", "kiem thu", "e2e", "unit test", "playwright", "tdd", "mock", "seed", "chay test",
         "viet test", "regression", "fixture",
         "kiem chung", "tai hien", "reproduce", "repro", "smoke test", "integration test", "snapshot test",
+    ],
+    "e2e-evidence": [
+        # Running or verifying a test checklist with screenshots, not writing unit tests.
+        "e2e", "end to end", "end-to-end", "teste2e", "test e2e", "checklist", "check list", "evidence",
+        "bang chung", "test thu cong", "manual test", "chup anh", "chup man hinh", "screenshot",
+        "danh gia ok", "ok hay ng", "ok/ng", "test case", "testcase", "verify test",
     ],
     "design-change": [
         "thiet ke", "design", "de xuat", "proposal", "phuong an", "kha thi", "feasibility", "ke hoach", "plan",

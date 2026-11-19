@@ -1,0 +1,93 @@
+{
+  "schema": "devskills.e2e-checklist/1",
+  "task": "demo42",
+  "title": {
+    "vi": "Giá cả ngày cho thiết bị trong ghi chú lịch",
+    "en": "All-day equipment price in the calendar memo",
+    "ja": "カレンダーメモの備品に終日料金を反映"
+  },
+  "summary": {
+    "vi": "Synthetic example. Khi phòng áp dụng giá cả ngày, thiết bị bật giá cả ngày tính cái đầu tiên theo giá cả ngày, từ cái thứ hai theo giá thường; memo, chi tiết booking và PDF cùng số tiền.",
+    "en": "Synthetic example. When the room is all-day, equipment with the all-day option charges the first unit at the all-day price and the rest at the normal price; memo, booking detail and PDF show the same amount.",
+    "ja": "サンプル（架空データ）。会場が終日の場合、終日料金を適用する備品は1個目を終日料金、2個目以降を通常料金とし、メモ・案件詳細・PDFで同じ金額になること。"
+  },
+  "source": {
+    "branch": "fix/demo42",
+    "base": "main",
+    "ticket": "DEMO-42",
+    "docs": ["docs/specs/demo42.md"]
+  },
+  "environment": {
+    "vi": "Local: http://127.0.0.1:8000 (DB test tạo riêng cho lần chạy)",
+    "en": "Local: http://127.0.0.1:8000 (test DB created for the run)",
+    "ja": "ローカル: http://127.0.0.1:8000（実行用に作成したテストDB）"
+  },
+  "page_size": 10,
+  "preparation": [
+    {
+      "vi": "Thiết bị DEMO Projector: giá 500 / cái, giá cả ngày 1,000, bật 「áp dụng giá cả ngày」, thuế 10%.",
+      "en": "Equipment DEMO Projector: 500 per unit, all-day price 1,000, all-day option on, tax 10%.",
+      "ja": "備品 DEMO Projector: 単価500円、終日料金1,000円、「終日料金を適用する」＝する、税率10%。"
+    },
+    {
+      "vi": "Phòng DEMO Room A: 8:00 - 20:00 vượt giới hạn nên áp dụng giá cả ngày; 10:00 - 12:00 thì không.",
+      "en": "Room DEMO Room A: 8:00 - 20:00 exceeds the daily cap so all-day applies; 10:00 - 12:00 does not.",
+      "ja": "会場 DEMO Room A: 8:00 - 20:00は上限を超えるため終日、10:00 - 12:00は終日にならない。"
+    }
+  ],
+  "rules": {
+    "vi": "Quy tắc cần kiểm tra: cái đầu tiên = giá cả ngày, từ cái thứ hai = giá thường. Memo, chi tiết booking và PDF phải cùng số tiền.",
+    "en": "Rule under test: 1st unit = all-day price, 2nd unit onward = normal price. Memo, booking detail and PDF must agree.",
+    "ja": "確認するルール: 1個目＝終日料金、2個目以降＝通常料金。メモ・案件詳細・PDFで同じ金額になること。"
+  },
+  "cases": [
+    {
+      "id": "demo42-TC01",
+      "slug": "create-allday-qty3",
+      "title": {"vi": "Tạo booking cả ngày, thiết bị × 3", "en": "Create an all-day booking, equipment × 3", "ja": "終日の案件を登録、備品 × 3"},
+      "purpose": {"vi": "Memo, chi tiết và PDF cùng cách tính giá cả ngày.", "en": "Memo, detail and PDF use the same all-day calculation.", "ja": "メモ・詳細・PDFが同じ終日計算になること。"},
+      "preconditions": [
+        {"vi": "Đăng nhập bằng tài khoản test demo-admin.", "en": "Log in as the test account demo-admin.", "ja": "テスト用アカウント demo-admin でログインする。"}
+      ],
+      "data": [
+        {"label": {"vi": "Tên khách", "en": "Customer", "ja": "請求先名"}, "value": "DEMO42 Booking 001"},
+        {"label": {"vi": "Thời gian", "en": "Time", "ja": "時間"}, "value": "08:00 - 20:00"},
+        {"label": {"vi": "Thiết bị", "en": "Equipment", "ja": "備品"}, "value": "DEMO Projector × 3"}
+      ],
+      "steps": [
+        {
+          "action": {"vi": "Mở màn hình tạo booking, chọn DEMO Room A, 08:00 - 20:00.", "en": "Open the booking form, choose DEMO Room A, 08:00 - 20:00.", "ja": "案件登録を開き、DEMO Room A・08:00 - 20:00を指定する。"},
+          "data": "DEMO Room A, 08:00 - 20:00",
+          "expected": {"vi": "Phần dự toán hiện nhãn 「áp dụng cả ngày」.", "en": "The estimate shows the all-day label.", "ja": "見積に終日上限適用と表示される。"}
+        },
+        {
+          "action": {"vi": "Thêm DEMO Projector, số lượng 3.", "en": "Add DEMO Projector, quantity 3.", "ja": "DEMO Projectorを数量3で追加する。"},
+          "data": "DEMO Projector × 3",
+          "expected": {"vi": "Memo có đúng 2 dòng:", "en": "The memo shows exactly 2 lines:", "ja": "メモに次の2行が表示される:"},
+          "expected_block": "・DEMO Projector(1,100円)×1\n・DEMO Projector(550円)×2"
+        },
+        {
+          "action": {"vi": "Bấm Lưu, mở chi tiết booking và PDF.", "en": "Save, then open the booking detail and the PDF.", "ja": "登録し、案件詳細とPDFを開く。"},
+          "expected": {"vi": "Thiết bị chưa thuế 2,000 (1,000 + 500 × 2), đã gồm thuế 2,200 ở cả chi tiết và PDF.", "en": "Equipment 2,000 excl. tax (1,000 + 500 × 2), 2,200 incl. tax on both detail and PDF.", "ja": "備品は税抜2,000円（1,000 + 500 × 2）、税込2,200円で詳細・PDFとも一致する。"}
+        }
+      ],
+      "notes": {"vi": "Synthetic example.", "en": "Synthetic example.", "ja": "架空データの例。"}
+    },
+    {
+      "id": "demo42-TC02",
+      "slug": "short-time-no-allday",
+      "title": {"vi": "Thời gian ngắn: không áp dụng cả ngày", "en": "Short time: no all-day price", "ja": "短時間: 終日にならない"},
+      "purpose": {"vi": "Không áp dụng cả ngày thì mọi cái tính giá thường.", "en": "Without all-day every unit uses the normal price.", "ja": "終日でない場合は全て通常料金。"},
+      "data": [
+        {"label": {"vi": "Thời gian", "en": "Time", "ja": "時間"}, "value": "10:00 - 12:00"}
+      ],
+      "steps": [
+        {
+          "action": {"vi": "Ở form của TC01 (chưa lưu), đổi thời gian thành 10:00 - 12:00.", "en": "On the TC01 form (not saved), change the time to 10:00 - 12:00.", "ja": "TC01のフォーム（未保存）で時間を10:00 - 12:00に変更する。"},
+          "expected": {"vi": "Memo chỉ còn 1 dòng:", "en": "The memo shows one line:", "ja": "メモは1行になる:"},
+          "expected_block": "・DEMO Projector(550円)×3"
+        }
+      ]
+    }
+  ]
+}
