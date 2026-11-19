@@ -384,6 +384,26 @@ ds.py help <command> shows a command's options. Exit codes: 0 pass, 2 usage erro
     _add_common(knowledge_check, record_check_id="docs.knowledge")
     knowledge_check.set_defaults(handler="devskills.knowledge:run")
 
+    evidence = commands.add_parser("evidence", help="E2E/manual test evidence by checklist: init, checklist, report")
+    evidence_actions = evidence.add_subparsers(dest="evidence_action", required=True, metavar="ACTION")
+    evidence_init = evidence_actions.add_parser("init", help="create <root>/<task>/ and add the evidence root to .gitignore")
+    evidence_checklist = evidence_actions.add_parser(
+        "checklist", help="validate <task>/checklist.json, write checklist.html (vi/en/ja) and one folder per case")
+    evidence_report = evidence_actions.add_parser(
+        "report", help="write <task>/report.html: every case OK/NG with reasons and links, then each case's steps and screenshots")
+    for action_parser, handler, check_id in (
+            (evidence_init, "devskills.evidence:cmd_init", "evidence.init"),
+            (evidence_checklist, "devskills.evidence:cmd_checklist", "evidence.checklist"),
+            (evidence_report, "devskills.evidence:cmd_report", "e2e.evidence")):
+        _add_common(action_parser, record_check_id=check_id)
+        action_parser.add_argument("--root", metavar="DIR",
+                                   help="evidence root (default: .devskills.toml [evidence].root, an existing "
+                                        "evidence/ or deploy/evidence/, else evidence/)")
+        action_parser.set_defaults(handler=handler)
+    evidence_init.add_argument("--task", required=True, help="ticket or task id, one folder per task, e.g. no63_5")
+    evidence_checklist.add_argument("--task", required=True, help="task folder whose checklist.json is rendered")
+    evidence_report.add_argument("--task", help="report one task (default: every task under the root)")
+
     guard = commands.add_parser("guard", help="PreToolUse hook: deny/ask for dangerous shell commands")
     guard.add_argument("--check", metavar="COMMAND", help="evaluate one command instead of reading hook JSON from stdin")
     guard.add_argument("--mode", choices=["standard", "strict", "ask"], default="standard",

@@ -2,7 +2,7 @@
 name: dev-orchestrate
 description: "Use when working on any development task or ticket for an application (backend, frontend, API, database, jobs, infrastructure), in any language — requirements, impact or feasibility, planning or specifying, implementing a feature, bugfix or refactor, tests, review, commit or reporting results. Triggers (vi): làm task, ticket, thêm chức năng, sửa lỗi, triển khai, phân tích tác động, viết spec, test, review, commit, báo cáo kết quả. Repository-specific questions are in scope; pure conceptual questions do not require the implementation workflow. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.3"
+  version: "1.0.4"
   suite: devskills
 ---
 
@@ -23,6 +23,7 @@ For repository development, load this router first. Select domain skills from th
 - Rendered UI verification, UX review, responsive defect diagnosis and every UI E2E run → `verify-ui` and `ui-ux-pro-max`, including review-only requests (FE-010, FE-014). Visible changes receive this verification before handover. If `ui-ux-pro-max` is unavailable, record that and use the local visual checklist. Load `implement-frontend` when the task includes a fix or implementation.
 - Remote calls/retries/jobs → design-reliability; concurrency/resource use → review-performance.
 - Trust boundaries/secrets/permissions → review-security; tests → test-safely.
+- Running or verifying E2E/manual test cases by checklist, with screenshots per step, OK/NG summaries and the evidence report → e2e-evidence (with test-safely).
 - Infrastructure → design-infrastructure; source edits → write-maintainable-code and code-style.
 - Project document search/updates → index-project-knowledge; diff review → review-code.
 

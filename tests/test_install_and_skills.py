@@ -18,7 +18,7 @@ class SkillPackageTest(unittest.TestCase):
     def test_all_skills_validate(self):
         completed = run_cli("validate-skills", str(REPO_ROOT / "skills"))
         self.assertEqual(completed.returncode, 0, completed.stdout)
-        self.assertEqual(len(SKILL_NAMES), 17)
+        self.assertEqual(len(SKILL_NAMES), 18)
 
     def test_shims_match_the_canonical_copy(self):
         canonical = (REPO_ROOT / "tools" / "ds_shim.py").read_bytes()
@@ -367,7 +367,7 @@ class InstallerTest(unittest.TestCase):
     def test_install_status_update_rollback_uninstall(self):
         installed = self.installer("install")
         self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
-        self.assertIn("17 skill(s) valid", installed.stdout)
+        self.assertIn("18 skill(s) valid", installed.stdout)
         skill = self.target / "dev-orchestrate"
         self.assertTrue((skill / "scripts" / "_runtime" / "devskills" / "cli.py").is_file())
         manifest = json.loads((skill / "scripts" / "_runtime" / "MANIFEST.json").read_text())

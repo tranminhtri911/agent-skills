@@ -50,6 +50,10 @@ DEFAULT_PROFILE: dict[str, Any] = {
         # Optional CodeGraph call graph: auto (use when installed and indexed) | on | off.
         "codegraph": "auto",
     },
+    "evidence": {
+        # E2E/manual test evidence root relative to the repository, e.g. "deploy/evidence"; "" = auto-detect.
+        "root": "",
+    },
 }
 
 _ALLOWED_CHOICES: dict[tuple[str, str], frozenset[str]] = {

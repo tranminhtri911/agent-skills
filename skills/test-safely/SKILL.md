@@ -2,7 +2,7 @@
 name: test-safely
 description: "Use when planning, writing or running tests, test scripts or test data (SQL seeds, e2e), reproducing a bug, or verifying a change — especially anything touching money or payments, batch jobs, emails/SMS/push, paid or third-party APIs, production-like data, load or performance tests, migrations, or shared servers. Triggers (vi): viết test, chạy test, unit test, e2e, mock, dữ liệu giả, tái hiện lỗi, kiểm thử thanh toán/batch/email. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.3"
+  version: "1.0.4"
   suite: devskills
 ---
 
@@ -19,6 +19,7 @@ Load each with the Skill tool before working on that part; dev-orchestrate route
 - Tests that prove transactions, locks, deletes or migrations (real isolated engine, never a mocked DB) → **REQUIRED:** change-database.
 - Payment, email or external-provider failure paths → **REQUIRED:** design-reliability.
 - Any UI E2E run, screenshots or visual baselines → **REQUIRED:** `verify-ui`, which routes to the available `ui-ux-pro-max` for UX review.
+- Running a task's E2E or manual test cases by checklist with per-step screenshots and OK/NG evidence → **REQUIRED:** `e2e-evidence`.
 
 ## Profiles
 
