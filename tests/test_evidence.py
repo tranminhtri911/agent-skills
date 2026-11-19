@@ -171,15 +171,18 @@ class EvidenceCommandTest(unittest.TestCase):
         self.assertEqual(code, 3)
         self.assertEqual(payload["details"]["totals"]["cases"], 2, "a folder outside the checklist is not a case")
         report = (task_dir / "report.html").read_text()
-        overview = report.split('class="overview"', 1)[1].split("</table>", 1)[0]
+        overview = report.split('rp-overview', 1)[1].split("</table>", 1)[0]
         self.assertIn("Step 03 NG: PDF shows 3,300 instead of 2,200", overview)
         self.assertLess(overview.index("demo42-TC01"), overview.index("demo42-TC02"), "NG is listed before NOT RUN")
         self.assertIn('href="demo42-TC01_create-allday-qty3/summary_demo42-TC01.md"', overview)
-        step3 = report.split("<b>Step 03</b>", 1)[1].split('<div class="step ', 1)[0]
+        step3 = report.split('<span class="snum">Step 03</span>', 1)[1].split("</section>", 1)[0]
         self.assertIn('src="demo42-TC01_create-allday-qty3/step03_pdf.png"', step3)
         self.assertIn("2,200", step3, "the expected result of the checklist step is shown")
-        self.assertIn('<input type="checkbox" disabled checked><b>Step 01</b>', report)
-        self.assertIn("extra_detail.png", report.split("<h4>", 4)[-1])
+        self.assertIn('<input type="checkbox" disabled checked aria-label="step"><span class="snum">Step 01</span>', report)
+        other_images = report.split('<h4 class="rp-h">', 2)[-1]
+        self.assertIn('src="demo42-TC01_create-allday-qty3/extra_detail.png"', other_images,
+                      "screenshots of no step are shown under other screenshots")
+        self.assertIn('class="verdict-pill r-ng"', report)
         self.assertIn("TC9_old-manual-run/", report)
 
     def test_moved_task_folder_keeps_matching_cases_by_id(self):
@@ -214,6 +217,11 @@ class MarkdownTest(unittest.TestCase):
         self.assertIn("<table class=\"md\"><tr><th>a</th><th>b</th></tr><tr><td><code>x</code></td>", rendered)
         self.assertIn("&lt;b&gt;y&lt;/b&gt;", rendered)
         self.assertIn("<li><b>two</b></li>", rendered)
+
+    def test_nested_lists_follow_indentation_and_split_by_type(self):
+        rendered = evidence.markdown_html("- a\n  - a1\n  - a2\n- b\n1. x\n   - x1\n2. y")
+        self.assertEqual(rendered, "<ul><li>a<ul><li>a1</li><li>a2</li></ul></li><li>b</li></ul>"
+                                   "<ol><li>x<ul><li>x1</li></ul></li><li>y</li></ol>")
 
 
 if __name__ == "__main__":

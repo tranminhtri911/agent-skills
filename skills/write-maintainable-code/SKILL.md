@@ -2,7 +2,7 @@
 name: write-maintainable-code
 description: "Use when writing or modifying source code in any language — naming classes, methods, variables and constants, writing comments or docstrings, structuring functions and error handling, or reviewing code for readability and maintainability. Triggers (vi): viết hoặc sửa code, đặt tên biến/hàm, comment, docstring, code sạch, dễ bảo trì, refactor. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.4"
+  version: "1.0.5"
   suite: devskills
 ---
 

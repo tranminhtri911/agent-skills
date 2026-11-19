@@ -2,7 +2,7 @@
 name: test-safely
 description: "Use when planning, writing or running tests, test scripts or test data (SQL seeds, e2e), reproducing a bug, or verifying a change — especially anything touching money or payments, batch jobs, emails/SMS/push, paid or third-party APIs, production-like data, load or performance tests, migrations, or shared servers. Triggers (vi): viết test, chạy test, unit test, e2e, mock, dữ liệu giả, tái hiện lỗi, kiểm thử thanh toán/batch/email. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.4"
+  version: "1.0.5"
   suite: devskills
 ---
 

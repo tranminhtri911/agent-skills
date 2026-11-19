@@ -24,7 +24,15 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from devskills.evidence_templates import CHECKLIST_SCRIPT, PAGE_STYLE, REPORT_SCRIPT, UI_LABELS
+from devskills.evidence_templates import (
+    CHECKLIST_SCRIPT,
+    CHECKLIST_STYLE,
+    PAGE_STYLE,
+    PLAN_STYLE,
+    REPORT_SCRIPT,
+    REPORT_STYLE,
+    UI_LABELS,
+)
 from devskills.fsutil import atomic_write_text, read_json, resolve_repo_root, run_git, utc_now_iso
 from devskills.models import (
     EXEC_COMPLETED,
@@ -291,7 +299,7 @@ def label_html(key: str) -> str:
     return text_html(UI_LABELS[key])
 
 
-def page_shell(title: str, body: str, script: str, data_json: str = "") -> str:
+def page_shell(title: str, body: str, script: str, data_json: str = "", extra_style: str = "") -> str:
     """Complete self-contained HTML document: inline style, page body, optional embedded JSON data, inline script."""
     data_block = f'<script type="application/json" id="checklist-data">{data_json}</script>\n' if data_json else ""
     return f"""<!DOCTYPE html>
@@ -300,7 +308,7 @@ def page_shell(title: str, body: str, script: str, data_json: str = "") -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)}</title>
-<style>{PAGE_STYLE}</style>
+<style>{PAGE_STYLE}{extra_style}</style>
 </head>
 <body data-lang="vi">
 {body}
@@ -331,38 +339,47 @@ def pager_html() -> str:
 
 
 def render_checklist(data: dict[str, Any]) -> str:
-    """Self-contained checklist page: language switch, left menu, pages with totals, step checkboxes."""
+    """Self-contained checklist page in the plan.html look: hero with live stats, left menu, one card per case
+    with preconditions, test data and step checkboxes, pages with totals, language switch."""
     task = data["task"]
     page_size = data.get("page_size", DEFAULT_PAGE_SIZE)
     cases = data["cases"]
     pages = case_pages(cases, page_size)
     menu_items = []
     blocks = []
-    for case, page in zip(cases, pages):
+    for number, (case, page) in enumerate(zip(cases, pages), start=1):
         case_id = case["id"]
-        steps = case["steps"]
         menu_items.append(
-            f'<li data-page="{page}"><a href="#case-{esc(case_id)}" data-case-link="{esc(case_id)}">'
-            f'<i class="dot" data-dot="{esc(case_id)}"></i><b>{esc(case_id)}</b> {text_html(case["title"])}</a></li>')
-        blocks.append(_checklist_case_html(case, page, steps))
-    preparation = ""
+            f'<li data-page="{page}"><a href="#case-{esc(case_id)}" data-case-link="{esc(case_id)}" title="{esc(case_id)}">'
+            f'<i class="dot" data-dot="{esc(case_id)}"></i><span class="mnum">{number:02d}</span>'
+            f'<span>{text_html(case["title"])}</span></a></li>')
+        blocks.append(_checklist_case_html(case, page, number))
+    step_count = sum(len(case["steps"]) for case in cases)
+    intro = []
     if data.get("preparation"):
         items = "".join(f"<li>{text_html(item)}</li>" for item in data["preparation"])
-        preparation = (f'<details class="card" open><summary><b>{label_html("preparation")}</b></summary>'
-                       f"<ol>{items}</ol></details>")
-    rules = f'<div class="card rules">{text_html(data["rules"])}</div>' if data.get("rules") else ""
-    source = _source_html(data.get("source"), data.get("environment"))
+        intro.append(f'<details class="item depth-1" open><summary><span class="ititle">{label_html("preparation")}</span>'
+                     f'</summary><div class="ibody"><div class="prose"><ol>{items}</ol></div></div></details>')
+    if data.get("rules"):
+        intro.append(f'<details class="item depth-1" open><summary><span class="ititle">{label_html("rules")}</span>'
+                     f'</summary><div class="ibody"><div class="prose"><p>{text_html(data["rules"])}</p></div></div></details>')
+    stats = _checklist_stats_html(len(cases), step_count)
     body = f"""<aside class="side" id="side">
-  <div class="side-head"><b>{esc(task)}</b><div class="muted">{text_html(data["title"])}</div></div>
+  <div class="side-head"><span class="eyebrow">{esc(task)} · {label_html("checklist")}</span><b>{text_html(data["title"])}</b></div>
   <input type="search" class="search" id="caseSearch" placeholder="ID / keyword">
   <div class="side-totals" id="sideTotals"></div>
   <ul class="menu">{"".join(menu_items)}</ul>
 </aside>
-<main class="main">
+<main class="main plan checklist">
   {toolbar_html(f'<button type="button" id="resetChecks">{label_html("reset")}</button>')}
-  <h1>{heading_html(task, data["title"])}</h1>
-  {f'<p class="sub">{text_html(data["summary"])}</p>' if data.get("summary") else ""}
-  {source}{preparation}{rules}
+  <header class="hero">
+    <div class="hero-top"><span class="eyebrow">{esc(task)} · {label_html("checklist")}</span>{_source_chips(data.get("source"))}</div>
+    <h1>{heading_html(task, data["title"])}</h1>
+    {f'<p class="lead">{text_html(data["summary"])}</p>' if data.get("summary") else ""}
+    <div class="stats stats-5">{stats}</div>
+    {_environment_html(data.get("environment"), data.get("source"))}
+  </header>
+  {"".join(intro)}
   <div class="page-totals" id="pageTotals"></div>
   {pager_html()}
   {"".join(blocks)}
@@ -371,53 +388,82 @@ def render_checklist(data: dict[str, Any]) -> str:
     data_json = json.dumps({"task": task, "page_size": page_size, "cases": [
         {"id": case["id"], "page": page, "steps": len(case["steps"])} for case, page in zip(cases, pages)]},
         ensure_ascii=False).replace("</", "<\\/")
-    return page_shell(f"{task} Checklist", body, CHECKLIST_SCRIPT, data_json)
+    # The full checklist travels with its page: task-spec keeps no JSON file next to it (`spec source` reads it back).
+    source = json.dumps(data, ensure_ascii=False, indent=1).replace("</", "<\\/")
+    body += f'\n<script type="application/json" id="checklist-source">{source}</script>'
+    return page_shell(f"{task} Checklist", body, CHECKLIST_SCRIPT, data_json, extra_style=PLAN_STYLE + CHECKLIST_STYLE)
 
 
-def _source_html(source: Any, environment: Any) -> str:
+def _checklist_stats_html(case_count: int, step_count: int) -> str:
+    """Stat cards of the checklist hero; the script updates ticked steps, OK, NG and untested as the tester ticks."""
+    cards = (
+        (label_html("cases"), str(case_count), f"{step_count} step", "", ""),
+        (label_html("steps_ticked"), f"0/{step_count}", "", "", ' id="statSteps"'),
+        ("OK", "0", "", "st-ok", ' id="statOk"'),
+        ("NG", "0", "", "st-ng", ' id="statNg"'),
+        (label_html("untested"), str(case_count), "", "", ' id="statUntested"'),
+    )
+    return "".join(f'<div class="stat {css}"><span class="slabel">{label}</span><span class="svalue"{value_id}>{value}</span>'
+                   f'<span class="snote">{note}</span></div>' for label, value, note, css, value_id in cards)
+
+
+def _source_chips(source: Any) -> str:
+    if not isinstance(source, dict):
+        return ""
+    return "".join(f'<span class="chip">{esc(key)}: {esc(source[key])}</span>'
+                   for key in ("ticket", "branch", "base") if source.get(key) and not isinstance(source[key], list))
+
+
+def _environment_html(environment: Any, source: Any) -> str:
+    """Environment and reference documents under the hero (the documents the cases were derived from)."""
     rows = []
-    if isinstance(source, dict):
-        for key in ("branch", "base", "ticket", "docs"):
-            value = source.get(key)
-            if value:
-                shown = ", ".join(str(item) for item in value) if isinstance(value, list) else str(value)
-                rows.append(f"<tr><th>{esc(key)}</th><td>{esc(shown)}</td></tr>")
     if environment:
-        rows.append(f'<tr><th>{label_html("environment")}</th><td>{text_html(environment)}</td></tr>')
-    return f'<table class="meta">{"".join(rows)}</table>' if rows else ""
+        rows.append(f'<div class="env-row"><b>{label_html("environment")}</b><span>{text_html(environment)}</span></div>')
+    docs = source.get("docs") if isinstance(source, dict) else None
+    if docs:
+        shown = "".join(f"<code>{esc(item)}</code>" for item in (docs if isinstance(docs, list) else [docs]))
+        rows.append(f'<div class="env-row"><b>docs</b><span class="doc-list">{shown}</span></div>')
+    return f'<div class="env">{"".join(rows)}</div>' if rows else ""
 
 
-def _checklist_case_html(case: dict[str, Any], page: int, steps: list[dict[str, Any]]) -> str:
+def _checklist_case_html(case: dict[str, Any], page: int, number: int) -> str:
+    """One case card: purpose, evidence folder, preconditions and test data side by side, steps, result."""
     case_id = case["id"]
-    parts = [f'<p class="purpose">{text_html(case["purpose"])}</p>',
-             f'<p class="folder">{label_html("evidence_folder")}: <code>{esc(case_folder_name(case))}/</code></p>']
+    panels = []
     if case.get("preconditions"):
         items = "".join(f"<li>{text_html(item)}</li>" for item in case["preconditions"])
-        parts.append(f'<h4>{label_html("preconditions")}</h4><ul>{items}</ul>')
+        panels.append(f'<section class="cl-panel"><h4>{label_html("preconditions")}</h4><ul>{items}</ul></section>')
     if case.get("data"):
         rows = "".join(f"<tr><th>{text_html(row['label'])}</th><td>{text_html(row['value'])}</td></tr>" for row in case["data"])
-        parts.append(f'<h4>{label_html("test_data")}</h4><table class="data">{rows}</table>')
+        panels.append(f'<section class="cl-panel"><h4>{label_html("test_data")}</h4>'
+                      f'<table class="grid-table kv">{rows}</table></section>')
     step_rows = []
-    for number, step in enumerate(steps, start=1):
+    for step_number, step in enumerate(case["steps"], start=1):
         expected = text_html(step.get("expected"))
         if step.get("expected_block"):
             expected += f"<pre>{esc(step['expected_block'])}</pre>"
         step_rows.append(
-            f'<tr data-step-row><td class="n"><label><input type="checkbox" data-step="{esc(case_id)}-s{number}">'
-            f'{number:02d}</label></td><td>{text_html(step["action"])}</td><td>{text_html(step.get("data"))}</td>'
-            f'<td class="exp">{expected}</td></tr>')
-    parts.append(f'<table class="steps"><tr><th>Step</th><th>{label_html("action")}</th><th>{label_html("data")}</th>'
-                 f'<th>{label_html("expected")}</th></tr>{"".join(step_rows)}</table>')
+            f'<tr data-step-row><td class="n"><label><input type="checkbox" data-step="{esc(case_id)}-s{step_number}">'
+            f'<span>{step_number:02d}</span></label></td><td>{text_html(step["action"])}</td>'
+            f'<td>{text_html(step.get("data"))}</td><td class="exp">{expected}</td></tr>')
+    parts = [f'<div class="case-meta"><span class="chip">{label_html("evidence_folder")}: '
+             f'<code>{esc(case_folder_name(case))}/</code></span></div>']
+    if panels:
+        parts.append(f'<div class="cl-grid">{"".join(panels)}</div>')
+    parts.append(f'<div class="table-wrap"><table class="grid-table steps"><tr><th>Step</th><th>{label_html("action")}</th>'
+                 f'<th>{label_html("data")}</th><th>{label_html("expected")}</th></tr>{"".join(step_rows)}</table></div>')
     if case.get("notes"):
         parts.append(f'<div class="note">{text_html(case["notes"])}</div>')
     parts.append(
-        f'<div class="res"><label class="ok"><input type="checkbox" data-result="{esc(case_id)}" value="OK"> OK</label>'
-        f'<label class="ng"><input type="checkbox" data-result="{esc(case_id)}" value="NG"> NG</label>'
+        f'<div class="res"><span class="res-label">{label_html("result")}</span>'
+        f'<label class="toggle ok"><input type="checkbox" data-result="{esc(case_id)}" value="OK"><span>OK</span></label>'
+        f'<label class="toggle ng"><input type="checkbox" data-result="{esc(case_id)}" value="NG"><span>NG</span></label>'
         f'<input type="text" class="memo" data-memo="{esc(case_id)}" placeholder="memo / screenshot"></div>')
-    return (f'<details class="case" id="case-{esc(case_id)}" data-page="{page}" data-case="{esc(case_id)}" open>'
-            f'<summary><i class="dot" data-dot="{esc(case_id)}"></i><b class="cid">{esc(case_id)}</b>'
-            f'<span class="ctitle">{text_html(case["title"])}</span>'
-            f'<span class="cstat" data-case-progress="{esc(case_id)}"></span></summary>{"".join(parts)}</details>')
+    return (f'<details class="case block cl-case" id="case-{esc(case_id)}" data-page="{page}" data-case="{esc(case_id)}" open>'
+            f'<summary><span class="bnum">{number:02d}</span><span class="btitle"><span class="cid">{esc(case_id)}</span> '
+            f'{text_html(case["title"])}</span><i class="dot" data-dot="{esc(case_id)}"></i>'
+            f'<span class="bcount" data-case-progress="{esc(case_id)}"></span></summary>'
+            f'<p class="bhint">{text_html(case["purpose"])}</p><div class="bbody">{"".join(parts)}</div></details>')
 
 
 # --------------------------------------------------------------------------- reading case results
@@ -706,6 +752,41 @@ def _inline_markdown(text: str) -> str:
     return re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', escaped)
 
 
+def _list_html(lines: list[str]) -> str:
+    """A Markdown list with nesting by indentation (`  - child` under `- parent`); continuation lines join their item."""
+    entries: list[tuple[int, bool, str]] = []  # (indent, ordered, text)
+    for line in lines:
+        item = re.match(r"^(\s*)([-*]|\d+\.)\s+(.*)$", line)
+        if item:
+            entries.append((len(item.group(1)), item.group(2)[0].isdigit(), item.group(3)))
+        elif entries:
+            indent, ordered, text = entries[-1]
+            entries[-1] = (indent, ordered, f"{text} {line.strip()}")
+
+    def build(start: int, indent: int) -> tuple[str, int]:
+        ordered = entries[start][1]
+        items: list[str] = []
+        position = start
+        while position < len(entries) and entries[position][0] >= indent:
+            if entries[position][0] == indent and entries[position][1] != ordered:
+                break  # `- a` followed by `1. b` at the same level: two lists
+            if entries[position][0] > indent:
+                nested, position = build(position, entries[position][0])
+                items[-1] = items[-1][:-len("</li>")] + nested + "</li>"
+                continue
+            items.append(f"<li>{_inline_markdown(entries[position][2])}</li>")
+            position += 1
+        tag = "ol" if ordered else "ul"
+        return f"<{tag}>{''.join(items)}</{tag}>", position
+
+    parts: list[str] = []
+    position = 0
+    while position < len(entries):
+        part, position = build(position, entries[position][0])
+        parts.append(part)
+    return "".join(parts)
+
+
 def markdown_html(text: str) -> str:
     """Headings, tables, lists, code fences, bold, inline code and links: what case summaries use."""
     output: list[str] = []
@@ -742,18 +823,13 @@ def markdown_html(text: str) -> str:
             output.append(f"<h{level}>{_inline_markdown(heading.group(2))}</h{level}>")
             index += 1
             continue
-        list_match = re.match(r"^([-*]|\d+\.)\s+(.*)$", stripped)
-        if list_match:
-            ordered = list_match.group(1)[0].isdigit()
-            items: list[str] = []
-            while index < len(lines):
-                item = re.match(r"^\s*([-*]|\d+\.)\s+(.*)$", lines[index])
-                if not item:
-                    break
-                items.append(f"<li>{_inline_markdown(item.group(2))}</li>")
+        if re.match(r"^([-*]|\d+\.)\s+(.*)$", stripped):
+            block: list[str] = []
+            while index < len(lines) and (re.match(r"^\s*([-*]|\d+\.)\s+", lines[index])
+                                          or (lines[index].startswith("  ") and lines[index].strip() and block)):
+                block.append(lines[index])
                 index += 1
-            tag = "ol" if ordered else "ul"
-            output.append(f"<{tag}>{''.join(items)}</{tag}>")
+            output.append(_list_html(block))
             continue
         if stripped:
             output.append(f"<p>{_inline_markdown(stripped)}</p>")
@@ -798,8 +874,8 @@ def _overview_html(entries: list[dict[str, Any]]) -> str:
         group = [entry for entry in entries if entry["result"] == result]
         if not group:
             continue
-        rows.append(f'<tr class="group r-{result.lower()}"><th colspan="5">{_result_pill(result)} {len(group)} '
-                    f'{label_html("cases")}</th></tr>')
+        rows.append(f'<tr class="group r-{result.lower()}"><th colspan="5">{_result_pill(result)} '
+                    f'<span class="muted">{len(group)} {label_html("cases")}</span></th></tr>')
         for entry in group:
             case = entry["case"]
             title = text_html(case["title"]) if case else esc(entry["folder"])
@@ -807,12 +883,15 @@ def _overview_html(entries: list[dict[str, Any]]) -> str:
             passed = sum(1 for step in steps.values() if step["status"] == STEP_PASS)
             total = len(case["steps"]) if case else len(steps)
             rows.append(
-                f'<tr><td class="nowrap"><b>{esc(entry["id"])}</b></td><td>{title}</td>'
-                f'<td class="nowrap">{passed} / {total}</td><td>{_inline_markdown(entry["reason"]) or "—"}</td>'
-                f'<td class="nowrap">{_case_links(entry)}</td></tr>')
-    head = (f'<tr><th>Case</th><th>{label_html("title")}</th><th>{label_html("steps_passed")}</th>'
+                f'<tr class="row"><td class="nowrap c-id"><span class="cid">{esc(entry["id"])}</span></td>'
+                f'<td class="c-title">{title}</td><td class="nowrap num c-steps">{passed} / {total}</td>'
+                f'<td class="c-reason">{_inline_markdown(entry["reason"]) or "—"}</td>'
+                f'<td class="nowrap c-links">{_case_links(entry)}</td></tr>')
+    head = (f'<tr class="head"><th>Case</th><th>{label_html("title")}</th><th>{label_html("steps_passed")}</th>'
             f'<th>{label_html("reason")}</th><th>{label_html("links")}</th></tr>')
-    return f'<h2>{label_html("overview")}</h2><table class="overview">{head}{"".join(rows)}</table>'
+    return (f'<details class="item depth-1 rp-overview" open><summary><span class="ititle">{label_html("overview")}'
+            f'</span></summary><div class="ibody"><div class="table-wrap"><table class="grid-table">{head}{"".join(rows)}'
+            f'</table></div></div></details>')
 
 
 def _images_for_step(number: int, images: list[str]) -> list[str]:
@@ -832,12 +911,12 @@ def _figures_html(folder: str, names: list[str]) -> str:
     figures = "".join(
         f'<figure><a href="{file_href(folder, name)}" target="_blank"><img loading="lazy" src="{file_href(folder, name)}" '
         f'alt="{esc(name)}"></a><figcaption>{esc(name)}</figcaption></figure>' for name in names)
-    return f'<div class="grid">{figures}</div>' if figures else ""
+    return f'<div class="shots">{figures}</div>' if figures else ""
 
 
 def _step_block_html(number: int, step: dict[str, Any] | None, recorded: dict[str, Any] | None, images: list[str],
                      folder: str) -> str:
-    """One step: ticked box from the recorded result, action / data / expected from the checklist, what was seen, its screenshots."""
+    """One step card: ticked box from the recorded result, action / data / expected, what was seen, its screenshots."""
     status = recorded["status"] if recorded else STEP_NOT_RUN
     checked = " checked" if status == STEP_PASS else ""
     rows = []
@@ -849,59 +928,70 @@ def _step_block_html(number: int, step: dict[str, Any] | None, recorded: dict[st
         expected = text_html(step.get("expected"))
         if step.get("expected_block"):
             expected += f"<pre>{esc(step['expected_block'])}</pre>"
-        rows.append((label_html("expected"), f'<span class="exp">{expected}</span>'))
-    observed = "<br>".join(_inline_markdown(text) for text in recorded["observed"]) if recorded else ""
+        rows.append((label_html("expected"), expected))
+    observed = "".join(f"<div>{_inline_markdown(text)}</div>" for text in recorded["observed"]) if recorded else ""
     rows.append((label_html("observed"), observed or f'<span class="muted">{label_html("no_record")}</span>'))
-    fields = "".join(f"<dt>{label}</dt><dd>{value}</dd>" for label, value in rows)
-    return (f'<div class="step s-{status.lower()}"><div class="step-head"><input type="checkbox" disabled{checked}>'
-            f'<b>Step {number:02d}</b> {_result_pill(status)}</div><dl>{fields}</dl>{_figures_html(folder, images)}</div>')
+    fields = "".join(f'<div class="kv-row{" observed" if index == len(rows) - 1 else ""}"><span class="k">{label}</span>'
+                     f'<span class="v">{value}</span></div>' for index, (label, value) in enumerate(rows))
+    return (f'<section class="rp-step s-{status.lower()}"><header><input type="checkbox" disabled{checked} aria-label="step">'
+            f'<span class="snum">Step {number:02d}</span>{_result_pill(status)}</header><div class="kv">{fields}</div>'
+            f'{_figures_html(folder, images)}</section>')
 
 
-def _report_case_html(entry: dict[str, Any], page: int, case_findings: list[Finding]) -> str:
+def _case_panels_html(case: dict[str, Any]) -> str:
+    """Preconditions and test data side by side, as on the checklist."""
+    panels = []
+    if case.get("preconditions"):
+        items = "".join(f"<li>{text_html(item)}</li>" for item in case["preconditions"])
+        panels.append(f'<section class="cl-panel"><h4>{label_html("preconditions")}</h4><ul>{items}</ul></section>')
+    if case.get("data"):
+        rows = "".join(f"<tr><th>{text_html(row['label'])}</th><td>{text_html(row['value'])}</td></tr>" for row in case["data"])
+        panels.append(f'<section class="cl-panel"><h4>{label_html("test_data")}</h4><table class="grid-table kv">{rows}</table></section>')
+    return f'<div class="cl-grid">{"".join(panels)}</div>' if panels else ""
+
+
+def _report_case_html(entry: dict[str, Any], page: int, number: int, case_findings: list[Finding]) -> str:
+    """One case card: result, reason and conclusion, preconditions and data, a card per step with its screenshots."""
     case = entry["case"]
     result = entry["result"]
     folder = entry["folder"]
     title = text_html(case["title"]) if case else esc(folder)
     fields = entry["fields"]
-    meta = [f"{label_html(key)}: {esc(fields[key])}" for key in ("environment", "tested_at", "tester") if fields.get(key)]
-    parts = [f'<p class="meta-line">{" · ".join(meta + [_case_links(entry)])}</p>']
+    chips = [f'<span class="chip">{label_html(key)}: {esc(fields[key])}</span>'
+             for key in ("environment", "tested_at", "tester") if fields.get(key)]
+    parts = [f'<div class="case-meta">{"".join(chips)}<span class="links">{_case_links(entry)}</span></div>']
     if entry["reason"] and result != RESULT_OK:
-        parts.append(f'<div class="reason r-{result.lower()}"><b>{label_html("reason")}:</b> '
-                     f'{_inline_markdown(entry["reason"])}</div>')
+        parts.append(f'<div class="reason r-{result.lower()}"><b>{label_html("reason")}</b>'
+                     f'<span>{_inline_markdown(entry["reason"])}</span></div>')
     if entry["conclusion"]:
-        parts.append(f'<div class="conclusion"><b>{label_html("conclusion")}:</b>{markdown_html(entry["conclusion"])}</div>')
+        parts.append(f'<div class="conclusion"><b>{label_html("conclusion")}</b><div class="prose">'
+                     f'{markdown_html(entry["conclusion"])}</div></div>')
     if case:
-        parts.append(f'<p class="purpose">{text_html(case["purpose"])}</p>')
-        if case.get("preconditions"):
-            items = "".join(f"<li>{text_html(item)}</li>" for item in case["preconditions"])
-            parts.append(f'<h4>{label_html("preconditions")}</h4><ul>{items}</ul>')
-        if case.get("data"):
-            data_rows = "".join(f"<tr><th>{text_html(row['label'])}</th><td>{text_html(row['value'])}</td></tr>"
-                                for row in case["data"])
-            parts.append(f'<h4>{label_html("test_data")}</h4><table class="data">{data_rows}</table>')
+        parts.append(_case_panels_html(case))
     shown: set[str] = set()
     step_numbers = range(1, len(case["steps"]) + 1) if case else sorted(entry["steps"])
     step_blocks = []
-    for number in step_numbers:
-        recorded = entry["steps"].get(number)
+    for step_number in step_numbers:
+        recorded = entry["steps"].get(step_number)
         named = [name for name in (recorded["images"] if recorded else []) if name in entry["images"]]
-        images = named + [name for name in _images_for_step(number, entry["images"]) if name not in named]
+        images = named + [name for name in _images_for_step(step_number, entry["images"]) if name not in named]
         shown.update(images)
-        step = case["steps"][number - 1] if case else None
-        step_blocks.append(_step_block_html(number, step, recorded, images, folder))
-    parts.append(f'<h4>{label_html("steps")}</h4>{"".join(step_blocks)}')
+        step = case["steps"][step_number - 1] if case else None
+        step_blocks.append(_step_block_html(step_number, step, recorded, images, folder))
+    parts.append(f'<h4 class="rp-h">{label_html("steps")}</h4><div class="rp-steps">{"".join(step_blocks)}</div>')
     other_images = [name for name in entry["images"] if name not in shown]
     if other_images:
-        parts.append(f'<h4>{label_html("other_images")}</h4>{_figures_html(folder, other_images)}')
+        parts.append(f'<h4 class="rp-h">{label_html("other_images")}</h4>{_figures_html(folder, other_images)}')
     for section_title, section_text in entry["sections"]:
         heading = esc(section_title) if section_title else label_html("summary_info")
-        parts.append(f'<details class="card" open><summary><b>{heading}</b></summary>'
-                     f'<div class="summary-md">{markdown_html(section_text)}</div></details>')
+        parts.append(f'<details class="item depth-2" open><summary><span class="ititle">{heading}</span></summary>'
+                     f'<div class="ibody"><div class="prose">{markdown_html(section_text)}</div></div></details>')
     parts += [f'<div class="note">{esc(finding.message)}</div>' for finding in case_findings]
-    return (f'<details class="case r-{result.lower()}" id="case-{esc(entry["id"])}" data-page="{page}" '
-            f'data-case="{esc(entry["id"])}" open><summary><i class="dot r-{result.lower()}"></i>'
-            f'<b class="cid">{esc(entry["id"])}</b><span class="ctitle">{title}</span>{_result_pill(result)}</summary>'
-            f'{"".join(parts)}</details>')
+    purpose = f'<p class="bhint">{text_html(case["purpose"])}</p>' if case else ""
+    return (f'<details class="case block rp-case r-{result.lower()}" id="case-{esc(entry["id"])}" data-page="{page}" '
+            f'data-case="{esc(entry["id"])}" open><summary><span class="bnum">{number:02d}</span><span class="btitle">'
+            f'<span class="cid">{esc(entry["id"])}</span> {title}</span>{_result_pill(result)}</summary>'
+            f'{purpose}<div class="bbody">{"".join(parts)}</div></details>')
 
 
 def _unlisted_html(unlisted: list[dict[str, Any]]) -> str:
@@ -909,20 +999,30 @@ def _unlisted_html(unlisted: list[dict[str, Any]]) -> str:
         return ""
     rows = "".join(
         f'<tr><td><a href="{file_href(item["folder"])}/" target="_blank">{esc(item["folder"])}/</a></td>'
-        f'<td>{item["images"]}</td><td>'
+        f'<td class="num">{item["images"]}</td><td>'
         + (f'<a href="{file_href(item["folder"], item["summary"])}" target="_blank">{esc(item["summary"])}</a>'
            if item["summary"] else "—")
         + "</td></tr>" for item in unlisted)
-    return (f'<h2>{label_html("unlisted")}</h2><table class="overview"><tr><th>{label_html("folder")}</th>'
-            f'<th>{label_html("images")}</th><th>summary</th></tr>{rows}</table>')
+    return (f'<details class="item depth-1" open><summary><span class="ititle">{label_html("unlisted")}</span></summary>'
+            f'<div class="ibody"><div class="table-wrap"><table class="grid-table"><tr><th>{label_html("folder")}</th>'
+            f'<th>{label_html("images")}</th><th>summary</th></tr>{rows}</table></div></div></details>')
+
+
+def _report_stats_html(counts: dict[str, int]) -> str:
+    cards = [(esc(key.replace("_", " ")), counts[key], f"r-{key.lower()}") for key in RESULT_ORDER]
+    cards.append((label_html("images"), counts["images"], ""))
+    return "".join(f'<div class="stat {css}"><span class="slabel">{label}</span><span class="svalue">{value}</span>'
+                   f'<span class="snote">/ {counts["cases"]} {label_html("cases")}</span></div>' if css else
+                   f'<div class="stat"><span class="slabel">{label}</span><span class="svalue">{value}</span></div>'
+                   for label, value, css in cards)
 
 
 def render_task_report(task_dir: Path, checklist: dict[str, Any] | None, entries: list[dict[str, Any]],
                        unlisted: list[dict[str, Any]], findings: list[Finding]) -> str:
-    """report.html: verdict, every case OK/NG with its reason and links, then per case the checklist steps with
-    their recorded result, observation and screenshots. The only report file of a task."""
+    """report.html in the plan / checklist look: verdict and stats, every case OK/NG with its reason and links,
+    then a card per case with its steps, observations and screenshots. The only report file of a task."""
     task = checklist["task"] if checklist else task_dir.name
-    title = text_html(checklist["title"]) if checklist else ""
+    title = checklist["title"] if checklist else ""
     page_size = checklist.get("page_size", DEFAULT_PAGE_SIZE) if checklist else DEFAULT_PAGE_SIZE
     pages = case_pages(entries, page_size)
     counts = task_counts(entries)
@@ -932,31 +1032,36 @@ def render_task_report(task_dir: Path, checklist: dict[str, Any] | None, entries
         findings_by_folder.setdefault((finding.path or "").split("/", 1)[0], []).append(finding)
     menu = []
     blocks = []
-    for entry, page in zip(entries, pages):
+    for number, (entry, page) in enumerate(zip(entries, pages), start=1):
         case_title = text_html(entry["case"]["title"]) if entry["case"] else esc(entry["folder"])
-        menu.append(f'<li data-page="{page}"><a href="#case-{esc(entry["id"])}" data-case-link="{esc(entry["id"])}">'
-                    f'<i class="dot r-{entry["result"].lower()}"></i><b>{esc(entry["id"])}</b> {case_title}</a></li>')
-        blocks.append(_report_case_html(entry, page, findings_by_folder.get(entry["folder"], [])))
-    kpis = "".join(f'<div class="kpi r-{key.lower()}"><b>{counts[key]}</b>{esc(key.replace("_", " "))}</div>'
-                   for key in RESULT_ORDER)
-    kpis += f'<div class="kpi"><b>{counts["cases"]}</b>{label_html("cases")}</div>'
-    kpis += f'<div class="kpi"><b>{counts["images"]}</b>{label_html("images")}</div>'
+        menu.append(f'<li data-page="{page}"><a href="#case-{esc(entry["id"])}" data-case-link="{esc(entry["id"])}" '
+                    f'title="{esc(entry["id"])}"><i class="dot r-{entry["result"].lower()}"></i><span class="mnum">'
+                    f'{number:02d}</span><span>{case_title}</span></a></li>')
+        blocks.append(_report_case_html(entry, page, number, findings_by_folder.get(entry["folder"], [])))
     task_notes = "".join(f'<div class="note">{esc(finding.message)}</div>' for finding in findings if not finding.path)
-    checklist_link = (f' · <a href="{CHECKLIST_HTML}" target="_blank">{CHECKLIST_HTML}</a>'
-                      if (task_dir / CHECKLIST_HTML).is_file() else "")
+    links = [f'<a href="{CHECKLIST_HTML}" target="_blank">{CHECKLIST_HTML}</a>'] if (task_dir / CHECKLIST_HTML).is_file() else []
+    environment = next((entry["fields"]["environment"] for entry in entries if entry["fields"].get("environment")), "")
+    env_block = (f'<div class="env"><div class="env-row"><b>{label_html("environment")}</b><span>{esc(environment)}</span>'
+                 f'</div></div>') if environment else ""
+    heading = heading_html(task, title) if title else esc(task)
     body = f"""<aside class="side" id="side">
-  <div class="side-head"><b>{esc(task)}</b><div class="muted">{title}</div></div>
+  <div class="side-head"><span class="eyebrow">{esc(task)} · {label_html("report")}</span><b>{text_html(title) if title else esc(task)}</b></div>
   <input type="search" class="search" id="caseSearch" placeholder="ID / keyword">
   <ul class="menu">{"".join(menu)}</ul>
 </aside>
-<main class="main">
+<main class="main plan checklist report">
   {toolbar_html()}
-  <h1>{esc(task)} — {label_html("report")}</h1>
-  <p class="sub">{title}{checklist_link} · {label_html("generated")} {esc(utc_now_iso())}</p>
-  <div class="verdict r-{verdict.lower()}">{label_html("verdict")}: <b>{verdict}</b></div>
-  <div class="kpis">{kpis}</div>{task_notes}
+  <header class="hero">
+    <div class="hero-top"><span class="eyebrow">{esc(task)} · {label_html("report")}</span>
+      {_source_chips((checklist or {}).get("source"))}<span class="verdict-pill r-{verdict.lower()}">{label_html("verdict")}: {verdict}</span></div>
+    <h1>{heading}</h1>
+    <div class="stats stats-6">{_report_stats_html(counts)}</div>
+    {env_block}
+    <div class="hero-links">{"".join(links)}<span class="muted">{label_html("generated")} {esc(utc_now_iso())}</span></div>
+  </header>
+  {task_notes}
   {_overview_html(entries)}
-  <h2>{label_html("case_details")}</h2>
+  <h2 class="rp-section">{label_html("case_details")}</h2>
   <div class="page-totals" id="pageTotals"></div>
   {pager_html()}
   {"".join(blocks)}
@@ -966,7 +1071,8 @@ def render_task_report(task_dir: Path, checklist: dict[str, Any] | None, entries
     data_json = json.dumps({"task": task, "page_size": page_size, "cases": [
         {"id": entry["id"], "page": page, "result": entry["result"]} for entry, page in zip(entries, pages)]},
         ensure_ascii=False).replace("</", "<\\/")
-    return page_shell(f"{task} Report", body, REPORT_SCRIPT, data_json)
+    return page_shell(f"{task} Report", body, REPORT_SCRIPT, data_json,
+                      extra_style=PLAN_STYLE + CHECKLIST_STYLE + REPORT_STYLE)
 
 
 # --------------------------------------------------------------------------- commands
