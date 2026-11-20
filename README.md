@@ -1,6 +1,6 @@
 # devskills: software development skills for AI coding agents
 
-A suite of 20 skills (Agent Skills / Claude Code) and a stdlib-only Python runtime (`ds.py`). The runtime turns important rules into evidence-based checks: understand code before editing, write maintainable code, protect databases/money/batches, test with isolated simulators, capture screenshots with baselines, review security, and **work within the user's authorization without repeated prompts for local tasks**.
+A suite of 21 skills (Agent Skills / Claude Code) and a stdlib-only Python runtime (`ds.py`). The runtime turns important rules into evidence-based checks: understand code before editing, write maintainable code, protect databases/money/batches, test with isolated simulators, capture screenshots with baselines, review security, and **work within the user's authorization without repeated prompts for local tasks**.
 
 Never fabricate data, code/APIs, sources, or results. Support important claims with inspected evidence, distinguish assumptions/mocks from reality, and label unverified work. Do requested work and necessary supporting changes; ask before extras. `trace` verifies tests only against exact passing testcases in reports; unexecuted, skipped, or unidentified tests remain `unverified`. Any unparseable file in a JUnit report set makes the runner `blocked`.
 
@@ -108,6 +108,7 @@ The skill gate is installed by default (`--without-skill-gate` opts out): enforc
 | `index-project-knowledge` | Create/check `.knowledge/INDEX.md` for md/docx/xlsx/pptx/pdf/html/csv |
 | `task-spec` | Turn a requirement into `specs/<task>/`: verbatim `require.md`, `plan.html` (overview, current/target flow diagrams, changes, impact, sub tasks, verify, tests, risks, questions, estimate, deploy; one block per page), `sub_tasks/taskNN_*.md` and a vi/en/ja `checklist.html` |
 | `e2e-evidence` | Run or verify a task's E2E/manual test cases by checklist (vi/en/ja `checklist.html`), a screenshot per step, OK/NG summary per case and one `report.html` per task (overview of every case, then each step with its screenshots) under a gitignored evidence root |
+| `delegate-subagent` | Keep the main context small: new documents or source beyond the session's material go to a subagent that returns a sourced summary (sonnet; haiku for mechanical search), and independent long runs (build, test suite, E2E) run in the background; briefs, return contracts and verification of what comes back |
 
 ## `ds.py` runtime
 

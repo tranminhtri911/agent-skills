@@ -2,7 +2,7 @@
 name: write-maintainable-code
 description: "Use when editing or refactoring source while preserving existing behavior, structure, comments and error handling. Triggers (vi): sửa code, refactor, gộp code trùng, dễ bảo trì, cập nhật comment cũ."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

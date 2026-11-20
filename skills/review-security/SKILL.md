@@ -2,7 +2,7 @@
 name: review-security
 description: "Use when code crosses a trust boundary or handles authentication, authorization, tenants, user input, uploads, payments or secrets. Triggers (vi): bảo mật, đăng nhập, phân quyền, token, dữ liệu cá nhân, XSS, lộ secret."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

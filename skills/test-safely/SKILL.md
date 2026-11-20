@@ -2,7 +2,7 @@
 name: test-safely
 description: "Use when planning, writing or running tests, fixtures, reproductions and safe verification that may touch real data, payments or external services. Triggers (vi): viết test, chạy test, unit test, E2E, mock, seed, tái hiện lỗi."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

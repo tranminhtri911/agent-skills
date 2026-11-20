@@ -2,7 +2,7 @@
 name: implement-frontend
 description: "Use when specifying, building or fixing web or mobile UI, including forms, state, navigation, layout and themes. Triggers (vi): làm giao diện, sửa màn hình, form, nút, widget, dark mode, sửa vỡ layout. Rendered review is handled by verify-ui."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

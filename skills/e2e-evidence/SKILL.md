@@ -2,7 +2,7 @@
 name: e2e-evidence
 description: "Use when executing or reporting checklist-based E2E or manual tests with per-step evidence and OK/NG results. Triggers (vi): chạy E2E, tạo checklist test, test theo checklist, chụp từng bước, báo cáo OK/NG."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

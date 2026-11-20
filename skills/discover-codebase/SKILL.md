@@ -2,7 +2,7 @@
 name: discover-codebase
 description: "Use when tracing existing repository code, callers, data flow or the impact of a proposed change. Triggers (vi): đọc code, tìm code, code này chạy thế nào, luồng hiện tại, ảnh hưởng file nào, bảng nào bị tác động."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

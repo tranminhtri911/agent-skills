@@ -1,6 +1,6 @@
 [project]
 name = "devskills"
-version = "1.0.7"
+version = "1.0.8"
 description = "Developer skill set for AI coding agents: SKILL.md workflows plus a stdlib-only Python runtime for evidence-producing checks."
 readme = "README.md"
 # The runtime needs only the standard library (tomllib → 3.11+). Playwright currently declares support up to 3.14.
