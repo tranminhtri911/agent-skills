@@ -1,8 +1,8 @@
 ---
 name: code-style
-description: "Use when writing, modifying or reviewing source code in any language or framework — naming variables, functions, classes, files and constants, laying out if/else and loops, lambdas, comprehensions and chains, static members, or choosing repository, builder, interface, abstract class, strategy or factory. Triggers (vi): đặt tên biến/hàm/class, coding style, convention, code dễ đọc, tường minh, if một dòng, lambda, static, interface, abstract, repository pattern, builder pattern. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when applying repository and language conventions to names, control flow, types and patterns. Triggers (vi): đặt tên biến, đặt tên hàm, coding style, convention, if một dòng, lambda, repository pattern."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 
@@ -76,6 +76,7 @@ A language or framework not listed: follow its official style guide and the repo
 ## Hand-offs
 
 - Comments, docstrings, error handling, no hard-coded domain values, changing existing code safely → **REQUIRED:** write-maintainable-code (load both for every code change, new or existing).
+- Documentation for new code and explicitly requested code comments → code-documentation.
 - Layers, modules and folders of a backend or frontend feature → implement-backend, implement-frontend.
 
 ## Common mistakes

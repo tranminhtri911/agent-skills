@@ -165,6 +165,20 @@ def resolve_target(args: argparse.Namespace) -> tuple[Path, bool]:
     raise InstallError(f"unknown target {target!r}")
 
 
+def warn_shared_skill_names(args: argparse.Namespace, target_root: Path, names: list[str], *, creating: bool = False) -> None:
+    """Flag copies in both user directories visible to a Codex session."""
+    if args.target_dir or args.target not in {"agents", "codex"}:
+        return
+    other_target = ".agents" if args.target == "codex" else ".codex"
+    other_root = Path.home() / other_target / "skills"
+    overlap = [name for name in names if (other_root / name / "SKILL.md").is_file()
+               and (creating or (target_root / name / "SKILL.md").is_file())]
+    if overlap:
+        print(f"  warning: Codex may see the same skill names in {target_root} and {other_root}:")
+        print(f"    {', '.join(overlap)}")
+        print("    Use one of these directories for devskills visible to Codex.")
+
+
 def selected_skills(args: argparse.Namespace) -> list[str]:
     available = source_skill_names()
     if not args.skills:
@@ -458,6 +472,7 @@ def install_or_update(args: argparse.Namespace, update_only: bool) -> int:
     names = selected_skills(args)
     stamp = now_stamp()
     print(f"target: {target_root}{'  (dry run)' if args.dry_run else ''}")
+    warn_shared_skill_names(args, target_root, names, creating=not update_only or args.link)
     if not args.dry_run:
         target_root.mkdir(parents=True, exist_ok=True)
     problems = 0
@@ -624,8 +639,10 @@ def tool_version(command: str) -> str | None:
 def cmd_status(args: argparse.Namespace) -> int:
     target_root, keep_placeholders = resolve_target(args)
     print(f"target: {target_root}  (source {REPO}, version {runtime_version()})")
+    names = selected_skills(args)
+    warn_shared_skill_names(args, target_root, names)
     outdated = 0
-    for name in selected_skills(args):
+    for name in names:
         destination = target_root / name
         if is_linked_install(destination):
             print(f"  linked     {name} -> {destination.resolve()} (always current)")
@@ -832,7 +849,7 @@ def cmd_guard(args: argparse.Namespace) -> int:
 COMMAND_HELP = {
     "install": ("install the skills and the skill gate (UI reference, venv and CodeGraph are opt-in)", """\
 examples:
-  python3 agent-skills.py install                                   # all 19 skills into ~/.claude/skills
+  python3 agent-skills.py install                                   # all 20 skills into ~/.claude/skills
   python3 agent-skills.py install --dry-run                         # show what would happen, change nothing
   python3 agent-skills.py install --skills dev-orchestrate,test-safely
   python3 agent-skills.py install --target claude-project --project ~/work/shop
@@ -898,7 +915,7 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--project", help="project root for --target claude-project (default: current directory)")
         sub.add_argument("--target-dir", help="install into this skills directory instead of a named target")
         sub.add_argument("--render-paths", action="store_true", help="with --target-dir: replace ${CLAUDE_SKILL_DIR} with real paths")
-        sub.add_argument("--skills", help="comma-separated subset of skills (default: all 19)")
+        sub.add_argument("--skills", help="comma-separated subset of skills (default: all 20)")
         sub.add_argument("--dry-run", action="store_true", help="print what would be done; change nothing")
         sub.add_argument("--force", action="store_true", help="replace foreign or locally edited skills (backups are kept)")
         if name == "install":

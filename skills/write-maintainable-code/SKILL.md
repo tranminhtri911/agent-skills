@@ -1,8 +1,8 @@
 ---
 name: write-maintainable-code
-description: "Use when writing or modifying source code in any language — naming classes, methods, variables and constants, writing comments or docstrings, structuring functions and error handling, or reviewing code for readability and maintainability. Triggers (vi): viết hoặc sửa code, đặt tên biến/hàm, comment, docstring, code sạch, dễ bảo trì, refactor. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when editing or refactoring source while preserving existing behavior, structure, comments and error handling. Triggers (vi): sửa code, refactor, gộp code trùng, dễ bảo trì, cập nhật comment cũ."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 
@@ -54,24 +54,16 @@ On a complex or long-lived system, judge each edit by risk: a small fix in well-
 
 ## Naming (CODE-001)
 
-| Element | Rule | Example |
-| --- | --- | --- |
-| Class/type | Domain noun, PascalCase | `InvoicePaymentService`, `CreateOrderRequest` |
-| Function/method | Verb + object, says the effect | `reserve_inventory` (Python), `reserveInventory` (TS/Java) |
-| Boolean | Question/statement | `is_active`, `has_permission`, `can_retry` |
-| Number with unit | Unit in the name or a type | `timeout_seconds`, `amount_minor`, `size_bytes` |
-| Collection | Plural or mapping | `pending_jobs`, `orders_by_customer_id` |
-| Enum/state | Finite domain | `PaymentStatus.PENDING` |
-| ID | Kind and scope | `tenant_id`, `provider_payment_id` |
-
-Follow the language convention (snake_case in Python, camelCase in JS/TS/Java, PascalCase methods in C#); the full casing tables per language and framework are in code-style. Avoid `data`, `tmp`, `obj`, `handleStuff`, `doIt` and abbreviations outside well-known ones (`id`, `url`, `db`). Name constants instead of magic numbers/strings — reusing the project's existing ones first (CODE-011).
+Use the project's domain vocabulary. Apply code-style's naming rules and its language and framework references (STYLE-001, STYLE-002). Include the entity and scope in identifier names, such as `tenant_id` or `provider_id`. Reuse the project's existing constants (CODE-011).
 
 ## Comments and docs (DOC-001…006)
 
 - Explain **why**, invariants, non-obvious decisions, and the contract: inputs/constraints, output, errors, side effects. Never narrate what the line obviously does.
-- Public functions, business rules, transaction/lock/retry code and non-obvious algorithms get a short doc comment.
+- Briefly document new public functions, business rules, transaction/lock/retry code and non-obvious algorithms that need explanation. Load code-documentation if available (DOC-007…012). This includes additions inside existing files.
 - DOC-003: follow the repository’s existing comment/doc conventions and language idioms. Use block comments or line comments as appropriate; Python uses `#` or docstrings, Go generally uses `//`. Only enforce a specific style when the project explicitly requests it through `[code].multiline_comment_style` (`off` by default). Templates are examples: [comment-templates.md](references/comment-templates.md).
-- TODO needs an owner or issue: `TODO(tri): …` or `TODO(#123): …`. Delete commented-out code (git keeps history). Update comments with the code.
+- For maintenance, keep existing comments intact. When your change makes an existing comment inaccurate, correct or remove only that comment, even when it sits outside the changed lines. Add or rewrite other documentation for existing code only when the user requests it.
+- When the user explicitly asks to add comments or docstrings, load code-documentation if available and keep the documentation within the requested scope.
+- TODO needs an owner or issue: `TODO(tri): …` or `TODO(#123): …`.
 - Comment language follows the repository; identifiers in English.
 
 ## Structure

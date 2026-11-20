@@ -1,8 +1,8 @@
 ---
 name: change-database
-description: "Use when analyzing, specifying, reviewing or changing anything that reads or writes a database — tables, keys, columns, indexes, migrations, queries, ORM models or repositories, deleting data, transactions, locks, long transactions, multi-step CRUD that must roll back together, or connection pools. Triggers (vi): xóa dữ liệu, thêm/sửa bảng hoặc cột, index, truy vấn, migration, giao dịch, khóa bản ghi, sao lưu/khôi phục, danh sách, báo cáo, CRUD. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when inspecting or changing database queries, schema, ORM, migrations, records, indexes, transactions or locks, including data-backed lists and deletes. Triggers (vi): DB, SQL, truy vấn, migration, thêm cột, xóa dữ liệu, khóa bản ghi, sao lưu DB."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

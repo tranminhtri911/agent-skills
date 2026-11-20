@@ -1,6 +1,6 @@
 # devskills: software development skills for AI coding agents
 
-A suite of 19 skills (Agent Skills / Claude Code) and a stdlib-only Python runtime (`ds.py`). The runtime turns important rules into evidence-based checks: understand code before editing, write maintainable code, protect databases/money/batches, test with isolated simulators, capture screenshots with baselines, review security, and **work within the user's authorization without repeated prompts for local tasks**.
+A suite of 20 skills (Agent Skills / Claude Code) and a stdlib-only Python runtime (`ds.py`). The runtime turns important rules into evidence-based checks: understand code before editing, write maintainable code, protect databases/money/batches, test with isolated simulators, capture screenshots with baselines, review security, and **work within the user's authorization without repeated prompts for local tasks**.
 
 Never fabricate data, code/APIs, sources, or results. Support important claims with inspected evidence, distinguish assumptions/mocks from reality, and label unverified work. Do requested work and necessary supporting changes; ask before extras. `trace` verifies tests only against exact passing testcases in reports; unexecuted, skipped, or unidentified tests remain `unverified`. Any unparseable file in a JUnit report set makes the runner `blocked`.
 
@@ -93,6 +93,7 @@ The skill gate is installed by default (`--without-skill-gate` opts out): enforc
 | `design-change` | Senior recommendations: options, tradeoffs, risks, recovery; plans/specs in `docs/` |
 | `write-maintainable-code` | Comments/docstrings in the repository's style, structure, errors, no hard-coding, changing existing code safely |
 | `code-style` | Explicit over short: naming and layout per language (Python, TS/JS, Java, Kotlin, C#, PHP, Go, Swift, Dart, SQL) and framework (Django, FastAPI, React/Next, Vue, Angular, NestJS, Spring, Android/Compose, ASP.NET Core, Laravel, SwiftUI, Flutter); patterns by signal |
+| `code-documentation` | Document new code where needed and add comments or docstrings when explicitly requested, including on existing code. Follow the repository's conventions and document verified behavior. |
 | `implement-backend` | Router → service → repository feature modules, jobs/batches, uploads, external clients |
 | `design-api` | Contracts, required endpoint samples/`curl` (API-011), errors, pagination, versions, idempotency, webhooks |
 | `implement-frontend` | Reuse project UI for development and maintenance. Consult the available `ui-ux-pro-max` for design decisions where the project lacks a suitable pattern. |

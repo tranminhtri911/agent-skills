@@ -1,8 +1,8 @@
 ---
 name: design-reliability
-description: "Use when designing, reviewing or adding retries, timeouts, fallbacks, queues, an outbox, compensation or rollback across several systems (database plus payment, email, storage or external APIs), jobs that must not run twice or die halfway, or partial failures. Triggers (vi): thử lại, timeout, mất kết nối, gọi dịch vụ ngoài, thanh toán, email/SMS/thông báo, đồng bộ, sao lưu lên Google Drive/cloud, job chạy trùng hoặc chết giữa chừng. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when handling duplicate effects, partial failures, retries, timeouts, recovery or delivery across jobs and external systems. Triggers (vi): gửi trùng, job chạy trùng, thử lại, mất mạng, timeout, đồng bộ, sao lưu lên Drive."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

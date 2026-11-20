@@ -1,8 +1,8 @@
 ---
 name: task-spec
-description: "Use when a ticket or task needs a written plan before or after work: turning a requirement (require.md, a pasted request or ticket) into specs/<task>/plan.html with overview, current and target flow diagrams, changes, impact, verify, tests, risks, questions, estimate and deploy, small sub task files and a test checklist. Triggers (vi): tạo spec, lên plan, viết plan, require.md, plan.html, chia task nhỏ, sub task, estimate task, phân tích yêu cầu. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when producing a written ticket spec or task plan with plan.html, subtasks and a test checklist. Triggers (vi): viết spec, lên plan cho ticket, chia task, estimate task, require.md, plan.html."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 
@@ -18,7 +18,7 @@ Load each with the Skill tool before writing that part; dev-orchestrate routes t
 
 - Reading the code the task touches (current flow, callers, data) → **REQUIRED:** discover-codebase.
 - Options, tradeoffs, risks and rollout → **REQUIRED:** design-change; and the domain skill of every area the plan changes (change-database, design-api, implement-backend, implement-frontend, design-reliability, review-security, review-performance).
-- Test plan and checklist cases → **REQUIRED:** test-safely; checklist format and later E2E runs → e2e-evidence.
+- Test plan and checklist cases → **REQUIRED:** test-safely. Use the checklist produced by `DS spec build`; apply e2e-evidence when executing or reporting the cases.
 
 ## Folder layout (SPEC-001)
 

@@ -2,6 +2,11 @@
 
 Every committed change bumps the suite version by one patch step (1.0.0 → 1.0.1 → 1.0.2) in `pyproject.toml`, `src/devskills/__init__.py`, every `skills/*/SKILL.md` `metadata.version` and a section below; `SuiteVersionTest` fails when they disagree.
 
+## 1.0.6 (2026-11-20)
+
+- New `code-documentation` skill (20th): what to document per kind of code — class/interface, method/function, complex logic, constants/config, database/model, API endpoint, background job/event, security/performance decision — with examples in `references/categories.md` (rules DOC-007..012, scenario EV55). Comments state only behavior verified in the implementation (status codes, retries, schedules and constraints from the code and its configuration), follow user instructions → repository convention → language standard → skill (`Target:` blocks only where they fit), use the language's native doc syntax, are added automatically to new code only (existing code a change updates gets no new or rewritten docs, except a comment the change made false; more only when the user asks) and are checked against a quality checklist before handover.
+- The workflow routes new code and explicit requests to add comments or docstrings to `code-documentation`. Claude's hook gives the same guidance without making the skill a condition of editing. `write-maintainable-code` covers existing comments during routine maintenance.
+
 ## 1.0.5 (2026-11-19)
 
 - New `task-spec` skill (19th): one folder per task under the specs root turns a verbatim `require.md` into `plan.html` (overview with requirement mapping, current and target flow with diagrams, changes, impact, sub tasks, verify, tests, risks, questions to confirm, estimate, deploy — one block per page, small nested collapsible items, stat cards, step bar, light/dark), small `sub_tasks/taskNN_<slug>.md` files (overview, implementation, unit test, E2E test, verify) and a vi/en/ja `checklist.html` in the e2e-evidence schema (rules SPEC-001..009, scenario EV54). The folder keeps no JSON: pages embed their data.

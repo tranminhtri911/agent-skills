@@ -17,7 +17,7 @@ python3 agent-skills.py help install
 ## 2. Installation
 
 ```bash
-# Install 19 skills, the routing rule and the skill gate; no third-party UI tool by default
+# Install 20 skills, the routing rule and the skill gate; no third-party UI tool by default
 python3 agent-skills.py install
 # Opt into an exact reviewed UI CLI release (replace X.Y.Z)
 python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z
@@ -27,14 +27,17 @@ python3 agent-skills.py install --with-codegraph
 python3 agent-skills.py install --skills dev-orchestrate,discover-codebase,test-safely
 # Project installation (commit .claude/skills for the team)
 python3 agent-skills.py install --target claude-project --project /path/to/project
-# Codex / Gemini CLI / Copilot CLI
-python3 agent-skills.py install --target agents
+# Codex (choose one target)
 python3 agent-skills.py install --target codex
+# Shared agent directory (alternative for Codex and other agents)
+python3 agent-skills.py install --target agents
 # Development: symlink to this repository
 python3 agent-skills.py install --link
 # If ~/.claude/skills was just created, run this in Claude Code
 /reload-skills
 ```
+
+Choose one user skills directory for devskills when Codex can see both `~/.codex/skills` and `~/.agents/skills`. Installing the same names in both can expose different versions and routing rules in one session. `status`, `install` and `update` flag matching names in both directories. To inspect an earlier installation before consolidating, run `python3 agent-skills.py uninstall --target agents --dry-run` (or `--target codex` if keeping the shared install). Uninstall backs up copies managed by devskills; the shared install can also serve other agents that use it.
 
 ### Make agents actually use the skills
 
@@ -71,7 +74,7 @@ python3 -m pip install "pillow==13.0.0" "pypdf==6.21.3"
 ## Skill gate (force skills to be loaded at the right time)
 
 Claude only loads skills when it chooses to. The skill gate makes that mandatory with Claude Code hooks:
-a PreToolUse hook denies Edit/Write of code until the routed skills (from the file kind/path) were loaded with the Skill tool; UserPromptSubmit, SubagentStart and post-compaction hooks re-inject the rule; a Stop hook blocks a final report whose "Skills applied" lists skills never loaded.
+a PreToolUse hook denies code edits and test, database or commit commands until the applicable skills are loaded. The hook routes from the current request and the action being taken. Explicit continuations such as `ok làm đi` reuse the prior request. UserPromptSubmit, SubagentStart and post-compaction hooks remind the assistant about routing. A Stop hook checks the required skills and the final "Skills applied" list.
 
 It is installed by default with `install` and `update` for the Claude targets and for `--target codex` (the old `--with-skill-gate` flag is still accepted and does nothing extra). Opt out with `--without-skill-gate`:
 

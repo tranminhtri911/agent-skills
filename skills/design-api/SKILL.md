@@ -1,8 +1,8 @@
 ---
 name: design-api
-description: "Use when specifying, reviewing, creating or changing an HTTP endpoint, request/response schema, status codes or error format, pagination/filtering, versioning, webhook, event or message contract, or when duplicate submissions and retries must not create duplicate effects. Triggers (vi): thêm/sửa API, endpoint, webhook, request/response, mã lỗi, phân trang, lọc, gửi trùng, idempotency. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when analyzing or changing an HTTP API, webhook or event contract, including payloads, pagination, errors, compatibility and endpoint idempotency. Triggers (vi): thêm API, sửa endpoint, request/response, webhook, phân trang API, mã lỗi."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

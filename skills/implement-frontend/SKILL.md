@@ -1,8 +1,8 @@
 ---
 name: implement-frontend
-description: "Use when building, specifying, reviewing or changing UI screens, pages, components, forms, client-side state, routing, data fetching, responsive layouts or themes in React, Next.js, Vue, Nuxt, Angular, Svelte, or mobile apps in React Native, Expo, Flutter, Jetpack Compose or SwiftUI. Triggers (vi): màn hình, giao diện, trang, component, form, nút, hiển thị, widget, màn hình khóa, responsive, app Android/iOS, dark mode, theme. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when specifying, building or fixing web or mobile UI, including forms, state, navigation, layout and themes. Triggers (vi): làm giao diện, sửa màn hình, form, nút, widget, dark mode, sửa vỡ layout. Rendered review is handled by verify-ui."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

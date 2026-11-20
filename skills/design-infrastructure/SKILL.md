@@ -1,8 +1,8 @@
 ---
 name: design-infrastructure
-description: "Use when creating or changing cloud infrastructure or its code — AWS or GCP networks (VPC, subnets, NAT, security groups, firewall rules), compute (EC2, ECS, GKE), databases (RDS, Aurora, Cloud SQL), buckets, or IAM roles and policies — in Terraform, CloudFormation, CDK or Pulumi. Triggers (vi): hạ tầng, AWS, GCP, VPC, subnet, EC2, RDS, IAM, phân quyền cloud, security group, Terraform. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when reviewing or changing cloud infrastructure or infrastructure code, including networks, compute, storage, managed databases or IAM. Triggers (vi): hạ tầng, AWS, GCP, Terraform, VPC, Cloud Run, security group."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

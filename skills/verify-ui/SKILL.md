@@ -1,8 +1,8 @@
 ---
 name: verify-ui
-description: "Use when verifying UI, reviewing UX or diagnosing broken responsive layouts on existing or changed web, iOS or Android screens, including UI states, accessibility and visual baselines. Triggers (vi): kiểm tra UI, review giao diện, vỡ layout, kiểm tra responsive, xuống dòng, tràn chữ, lỗi hiển thị, chụp màn hình, so sánh giao diện. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when inspecting rendered web or mobile UI, diagnosing layout defects, capturing screenshots or running UI E2E. Triggers (vi): kiểm tra UI, review giao diện, kiểm tra responsive, vỡ layout, tràn chữ, chụp màn hình."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

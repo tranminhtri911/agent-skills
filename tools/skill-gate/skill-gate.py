@@ -3,7 +3,7 @@
 
 Skills are routed by WHAT THE DEVELOPER ASKS FOR, never by class names or file contents:
   - the request  - the user's prompt (accent-insensitive Vietnamese + English) decides the domain and
-                   superpowers skills; a code edit additionally needs the three base skills
+                   superpowers skills; a code edit additionally needs the base edit skills (BASE_EDIT)
   - the command  - running tests, a database CLI or a commit needs test-safely / change-database / review-code
 The skills' own descriptions carry Vietnamese triggers too, so Claude matches them natively; the
 hooks are the safety net. They set a floor: Claude still loads whatever else the task touches.
@@ -34,7 +34,7 @@ ALL_SKILLS = [
     "design-api", "implement-backend", "implement-frontend", "verify-ui",
     "design-reliability", "review-performance", "review-security", "test-safely",
     "design-infrastructure", "write-maintainable-code", "code-style", "index-project-knowledge",
-    "review-code", "e2e-evidence", "task-spec",
+    "review-code", "e2e-evidence", "task-spec", "code-documentation",
 ]
 BASE_EDIT = ["dev-orchestrate", "discover-codebase", "write-maintainable-code", "code-style"]
 
@@ -48,7 +48,7 @@ SP_VERIFY = "superpowers:verification-before-completion"
 SP_RECEIVE_REVIEW = "superpowers:receiving-code-review"
 SUPERPOWERS = [SP_DEBUG, SP_BRAINSTORM, SP_TDD, SP_PLAN, SP_VERIFY, SP_RECEIVE_REVIEW]
 
-# Needed by the end of the work, not before the first edit (verify after building, review before handover).
+# These skills have their own verification or evidence phase.
 AFTER_WORK = {"verify-ui", "review-code", "e2e-evidence", SP_VERIFY}
 
 
@@ -84,19 +84,19 @@ PROMPT_AREAS = {
     "change-database": [
         # Deleting or listing records is a data change even when nobody says "database" (dev-orchestrate's
         # own example: "delete test surveys from the result list").
-        "xoa", "delete", "danh sach", "import", "export", "nhap du lieu", "xuat du lieu", "bao cao", "report",
+        "danh sach", "nhap du lieu", "xuat du lieu", "bao cao",
         "thong ke", "re:(them|xoa|doi|sua)\\s+cot",
         "database", "db", "csdl", "co so du lieu", "du lieu", "data", "sql", "query", "truy van", "migration",
         "migrate", "schema", "bang du lieu", "table", "cot du lieu", "column", "index", "khoa ngoai",
-        "khoa chinh", "foreign key", "transaction", "lock", "deadlock", "ban ghi", "record", "delete",
-        "xoa du lieu", "xoa ban ghi", "backup", "restore", "sao luu", "khoi phuc", "room", "prisma", "orm",
-        "crud", "sqlite", "postgres", "mysql", "mongodb", "redis", "luu tru", "storage",
+        "khoa chinh", "foreign key", "transaction", "lock", "deadlock", "ban ghi", "record",
+        "xoa du lieu", "xoa ban ghi", "backup", "restore", "sao luu", "khoi phuc", "room db", "prisma", "orm",
+        "crud", "sqlite", "postgres", "mysql", "mongodb", "redis",
         "khoa ban ghi", "toan ven du lieu", "chi muc", "phan trang du lieu", "connection pool",
         "rollback", "upsert", "soft delete", "nang cap schema",
     ],
     "design-api": [
         "api", "endpoint", "webhook", "rest", "graphql", "openapi", "swagger", "route", "status code", "idempotent", "idempotency", "phan trang", "pagination",
-        "request body", "response body", "http header", "ma loi", "hop dong api", "gui trung",
+        "request body", "response body", "http header", "ma loi", "hop dong api",
     ],
     "implement-backend": [
         "api", "backend", "back end", "server", "may chu", "service", "job", "batch", "cron", "scheduler",
@@ -113,12 +113,19 @@ PROMPT_AREAS = {
         "vo layout", "vo giao dien", "xuong dong", "tran chu", "can le", "khoang cach", "co chu",
         "loading state", "empty state", "error state", "accessibility", "a11y", "tablet", "tailwind",
     ],
+    "verify-ui": [
+        "kiem tra ui", "kiem tra giao dien", "kiem tra responsive", "review ui", "review ux", "review giao dien",
+        "review man hinh", "review layout", "ui review", "ux review", "visual review", "check ui", "inspect ui",
+        "chup man hinh", "chup anh ui", "screenshot", "visual regression", "vo layout", "vo giao dien", "tran chu",
+    ],
     "design-reliability": [
         "re:google\\s+driv\\w*", "drive", "backup", "sao luu", "khoi phuc", "restore", "upload", "tai len",
         "retry", "thu lai", "timeout", "het thoi gian", "queue", "hang doi", "outbox", "fallback",
         "thanh toan", "payment", "email", "sms", "push", "notification", "thong bao", "nhac nho", "reminder",
         "google drive", "firebase", "external", "ben thu ba", "third party", "goi api", "ket noi",
-        "mat ket noi", "offline", "dong bo", "sync", "chay hai lan", "trung lap", "duplicate",
+        # Duplicate effects only: "trùng lặp" / "duplicate" alone is usually duplicated code (write-maintainable-code).
+        "mat ket noi", "offline", "dong bo", "sync", "chay hai lan", "tao trung", "ghi trung",
+        "duplicate request", "duplicate payment", "duplicate charge", "duplicate message", "duplicate job",
         "gui trung", "chay trung", "mat mang", "dut ket noi", "thu lai tu dong", "circuit breaker",
         "partial failure", "compensation", "dead letter",
     ],
@@ -142,19 +149,31 @@ PROMPT_AREAS = {
     ],
     "task-spec": [
         # A ticket's written plan from its requirement, not code work itself.
-        "require.md", "plan.html", "sub task", "sub_tasks", "subtask", "tao spec", "viet spec", "len plan",
-        "viet plan", "tao plan", "chia task", "break task", "phan tich yeu cau", "estimate task",
+        "require.md", "plan.html", "sub task", "sub_tasks", "subtask", "tao spec", "viet spec", "write spec",
+        "chia task", "break task", "estimate task",
+        r"re:(?:plan|ke hoach|spec|dac ta)\s+(?:(?:cho|for)\s+)?(?:ticket|task)",
+    ],
+    "write-maintainable-code": [
+        "docstring", "jsdoc", "tsdoc", "phpdoc", "javadoc", "godoc", "kdoc", "xml doc", "doc comment",
+        "viet comment", "them comment", "sua comment", "comment code", "chu thich", "tai lieu code",
+        "document code", "code documentation", "refactor", "code sach", "de bao tri", "code trung lap",
+    ],
+    "code-style": [
+        "dat ten", "doi ten bien", "doi ten ham", "naming", "coding style", "code style", "convention", "lambda",
     ],
     "e2e-evidence": [
-        # Running or verifying a test checklist with screenshots, not writing unit tests.
-        "e2e", "end to end", "end-to-end", "teste2e", "test e2e", "checklist", "check list", "evidence",
-        "bang chung", "test thu cong", "manual test", "chup anh", "chup man hinh", "screenshot",
-        "danh gia ok", "ok hay ng", "ok/ng", "test case", "testcase", "verify test",
+        # Running or verifying a test checklist with screenshots per step. Writing an E2E suite is test-safely;
+        # A screenshot to judge a layout is verify-ui.
+        "chay e2e", "run e2e", "verify e2e", "teste2e", "test e2e", "chay playwright", "run playwright",
+        "tao checklist", "create checklist",
+        "test thu cong", "manual test", "chup anh tung step", "chup anh tung buoc",
+        "chup man hinh tung step", "chup man hinh tung buoc", "screenshot tung step", "test theo checklist",
+        "danh gia ok", "ok hay ng", "ok/ng",
     ],
     "design-change": [
         "thiet ke", "design", "de xuat", "proposal", "phuong an", "kha thi", "feasibility", "ke hoach", "plan",
-        "spec", "dac ta", "estimate", "uoc luong", "kien truc", "architecture", "refactor", "adr", "backlog",
-        "ticket", "danh gia anh huong", "impact", "tac dong", "anh huong",
+        "spec", "dac ta", "estimate", "uoc luong", "kien truc", "architecture", "adr", "backlog",
+        "danh gia anh huong", "impact", "tac dong", "anh huong",
         "chia task", "giai phap", "tradeoff", "trade-off", "decision memo", "technical proposal",
     ],
     "review-code": [
@@ -165,6 +184,10 @@ PROMPT_AREAS = {
         # Project documents, not product features ("tạo pdf" is a feature): only words that name the docs.
         "tai lieu", "docs", "specs", "requirement", "yeu cau du an", "dac ta yeu cau", "file thiet ke",
         "knowledge index", "index tai lieu", "tai lieu du an", "file excel", "file word", "file pdf",
+    ],
+    "discover-codebase": [
+        "tim trong code", "tim code", "doc code", "doc source", "xem code", "code nay chay", "codebase",
+        "luong hien tai", "trace flow", "trace code",
     ],
     "design-infrastructure": [
         "terraform", "aws", "gcp", "vpc", "subnet", "iam", "rds", "ec2", "kubernetes", "k8s", "cloudformation",
@@ -184,17 +207,24 @@ WORK_WORDS = [
     "toi uu", "optimize", "debug", "commit", "deploy", "port", "ho tro", "bo sung", "gop", "tach",
     # Requests phrased as wishes or needs ("nên có", "cần", "muốn", "giúp") are work too.
     # Not "can"/"nen" alone: "ko cần" (no need) and "nên không" are questions, not requests.
-    "nen co", "nen them", "can them", "can sua", "muon", "giup", "yeu cau", "chinh sua", "hien thi",
-    "kiem chung", "tai hien", "reproduce", "repro",
+    "nen co", "nen them", "can them", "can sua", "muon", "giup", "yeu cau", "chinh sua", "hien thi", "rename",
+    "kiem chung", "tai hien", "reproduce", "repro", "chay", "run", "chup", "screenshot", "check", "verify",
+    "doc", "read", "tim", "find", "xem", "inspect", "trace", "len plan", "write", "create", "document",
 ]
 # Phrases removed before matching because a keyword inside them means something else
 # ("chính sách bảo mật" is a privacy-policy page, not security work).
 IGNORED_PHRASES = re.compile(r"chinh\s+sach\s+bao\s+mat|privacy\s+policy|trang\s+thai")
+# Phrases removed for one area only when they name work owned by another skill.
+AREA_IGNORED_PHRASES = {
+    "review-code": re.compile(r"\breview\s+(?:lai\s+)?(?:giao\s+dien|ui|ux|man\s+hinh|layout)\b|\b(?:ui|ux|visual)\s+review\b"),
+    "change-database": re.compile(r"\bindex\s+(?:(?:cho|for)\s+)?(?:tai\s+lieu|docs)\b|\bknowledge\s+index\b"),
+    "index-project-knowledge": re.compile(r"\btai\s+lieu\s+code\b"),
+}
 BUILD_WORDS = [
-    "them", "sua", "fix", "trien khai", "implement", "viet", "tao", "xay dung", "build", "code",
+    "them", "sua", "fix", "trien khai", "implement", "viet", "tao", "xay dung", "build",
     "lam di", "lam luon", "lam tiep", "lam lai", "lam giup", "hay lam",
     "refactor", "xoa", "doi", "thay doi", "cap nhat", "nang cap", "tich hop", "add", "remove", "toi uu",
-    "port", "bo sung", "gop", "tach",
+    "port", "bo sung", "gop", "tach", "write", "create", "rename", "document",
 ]
 # Process signals for superpowers. A bug report is work even when phrased as a question ("vì sao ... ko được").
 BUG_WORDS = [
@@ -255,6 +285,32 @@ BUG_RE = _words_re(BUG_WORDS)
 FEATURE_RE = _words_re(FEATURE_WORDS)
 PLAN_RE = _words_re(PLAN_WORDS)
 REVIEW_FEEDBACK_RE = _words_re(REVIEW_FEEDBACK_WORDS)
+PLAN_REQUEST_RE = re.compile(
+    r"^(?:(?:hay|please|giup|vui\s+long)\s+)?(?:"
+    r"(?:(?:len|lap|viet|tao|write|create(?:\s+a)?)\s+)?(?:ke\s+hoach|plan|spec|dac\s+ta|roadmap|backlog)|"
+    r"chia\s+task|phan\s+tich\s+yeu\s+cau|(?:estimate|uoc\s+luong)\s+task)\b"
+)
+DOC_READ_RE = re.compile(r"^(?:doc|read|xem|open|tim|find)\s+(?:(?:the|file)\s+)*(?:spec|plan\.html|require\.md)\b")
+FOLLOW_UP_RE = _words_re(["lam di", "lam luon", "lam tiep", "sua luon di", "tiep tuc", "go ahead", "continue"])
+ARTIFACT_ONLY_RE = re.compile(r"\b(?:tao|create|build|cap\s+nhat|update)\s+(?:(?:a|the)\s+)?(?:checklist|(?:knowledge\s+)?index)\b")
+TEST_AUTHORING_RE = re.compile(r"\b(?:viet|write|them|add)\s+(?:(?:them|cac|an?|some)\s+)*(?:test|e2e|unit\s+test)\b")
+TEST_EXECUTION_RE = re.compile(r"\b(?:chay|run|verify)\s+(?:(?:lai|the)\s+)*(?:test|e2e|playwright)\b")
+DATA_DELETE_RE = _words_re([
+    r"re:(?:xoa|delete)\s+(?:(?:cac|all|the)\s+)*(?:khao\s+sat|surveys?|du\s+lieu|records?|"
+    r"nguoi\s+dung|users?|khach\s+hang|customers?|don\s+hang|orders?)",
+])
+DOC_REQUEST_RE = re.compile(
+    r"\b(?:them|viet|bo\s+sung|add|write)\s+(?:(?:them|cac|an?|more)\s+)*"
+    r"(?:comment[s]?|docstring[s]?|chu\s+thich|ghi\s+chu|jsdoc|tsdoc|phpdoc|javadoc|kdoc)\b"
+)
+
+
+def area_text(skill, text):
+    """The request text one area is matched against, without the phrases another skill owns."""
+    ignored = AREA_IGNORED_PHRASES.get(skill)
+    if ignored is None:
+        return text
+    return ignored.sub(" ", text)
 
 
 def route_prompt(prompt):
@@ -269,13 +325,47 @@ def route_prompt(prompt):
     matched = IGNORED_PHRASES.sub(" ", text)
     bug = bool(BUG_RE.search(text))
     asks_only = bool(QUESTION_TAIL_RE.search(text)) and not IMPERATIVE_RE.search(text)
+    areas = [skill for skill, pattern in PROMPT_AREA_RES.items() if pattern.search(area_text(skill, matched))]
+    plan_only = bool(PLAN_REQUEST_RE.search(text))
+    writes_tests = bool(TEST_AUTHORING_RE.search(text))
+    runs_tests = bool(TEST_EXECUTION_RE.search(text))
+    artifact_only = bool(ARTIFACT_ONLY_RE.search(text)) and set(areas) <= {"e2e-evidence", "index-project-knowledge"}
+    build = bool(BUILD_RE.search(text)) and not (plan_only or artifact_only)
+
+    if DATA_DELETE_RE.search(text) and "change-database" not in areas:
+        areas.append("change-database")
+    if DOC_READ_RE.search(text):
+        areas = [skill for skill in areas if skill not in {"task-spec", "design-change"}]
+        areas.append("index-project-knowledge")
+    if plan_only:
+        areas = [skill for skill in areas if skill not in {"e2e-evidence", "verify-ui"}]
+    if writes_tests and not runs_tests and "e2e-evidence" in areas:
+        areas.remove("e2e-evidence")
+    if "implement-frontend" in areas:
+        visual_review = "verify-ui" in areas
+        ui_e2e = "e2e-evidence" in areas and not plan_only
+        asks_how_to_change = "lam sao" in text or "how to" in text
+        if visual_review or ui_e2e or (not writes_tests and (build or asks_how_to_change)):
+            areas.append("verify-ui")
+        if (visual_review or ui_e2e or writes_tests) and (not build or writes_tests):
+            areas.remove("implement-frontend")
+
+    # A plan may describe future edits, tests and UI. Its output is the plan itself.
+    if plan_only and "design-change" not in areas:
+        areas.append("design-change")
+    if (writes_tests or runs_tests or "e2e-evidence" in areas) and "test-safely" not in areas:
+        areas.append("test-safely")
+    documentation_only = bool(DOC_REQUEST_RE.search(text)) and areas == ["write-maintainable-code"]
     return {
-        "areas": [skill for skill, pattern in PROMPT_AREA_RES.items() if pattern.search(matched)],
-        "work": (bool(WORK_RE.search(text)) or bug) and not asks_only,
-        "build": bool(BUILD_RE.search(text)),
+        "areas": dedupe(areas),
+        "work": (bool(WORK_RE.search(text)) or bug or plan_only or bool(FOLLOW_UP_RE.search(text))) and not asks_only,
+        "build": build and not asks_only,
         "bug": bug,
         "feature": bool(FEATURE_RE.search(text)),
-        "plan": bool(PLAN_RE.search(text)),
+        "plan": plan_only or (bool(PLAN_RE.search(text)) and "design-change" in areas and "task-spec" in areas),
+        "documentation": bool(DOC_REQUEST_RE.search(text)),
+        "documentation_only": documentation_only,
+        "follow_up": bool(FOLLOW_UP_RE.fullmatch(text.rstrip(".!? ").removeprefix("ok "))),
         "review_feedback": bool(REVIEW_FEEDBACK_RE.search(text)),
     }
 
@@ -283,27 +373,36 @@ def route_prompt(prompt):
 def skills_for_request(route, with_superpowers=False):
     """The full set a request needs by its end: dev-orchestrate's routing, plus superpowers' process skills."""
     areas = route["areas"]
-    if not areas:
+    # Topic-free follow-ups inherit only when cmd_prompt recognizes a continuation.
+    if route["follow_up"] or (not areas and not (route["work"] and route["build"])):
         return []
-    req = ["dev-orchestrate", "discover-codebase"] + areas
-    if "implement-frontend" in areas:
-        req.append("verify-ui")
+    req = ["dev-orchestrate"]
+    if route["build"] or route["plan"] or route["bug"]:
+        req.append("discover-codebase")
+    req += areas
     if route["feature"] or route["plan"]:
         req.append("design-change")
-    if route["build"] or route["bug"]:
+    if route["build"]:
         req += ["write-maintainable-code", "code-style", "test-safely", "review-code"]
+    process = []
     if with_superpowers:
-        if route["bug"]:
-            req.append(SP_DEBUG)
-        elif route["feature"]:
-            req.append(SP_BRAINSTORM)
-        if route["plan"]:
-            req.append(SP_PLAN)
+        # A ticket's plan is task-spec's plan.html (ROUTE-002); brainstorming and writing-plans would write a
+        # second design/plan file under docs/superpowers/.
+        plan_owned_by_task_spec = "task-spec" in areas
+        if route["bug"] and not route["plan"]:
+            process.append(SP_DEBUG)
+        elif route["feature"] and not plan_owned_by_task_spec:
+            process.append(SP_BRAINSTORM)
+        if route["plan"] and not plan_owned_by_task_spec:
+            process.append(SP_PLAN)
         if route["review_feedback"]:
-            req.append(SP_RECEIVE_REVIEW)
-        if route["build"] or route["bug"]:
-            req += [SP_TDD, SP_VERIFY]
-    return dedupe(req)
+            process.append(SP_RECEIVE_REVIEW)
+        if route["build"] and not route["documentation_only"]:
+            req.append(SP_TDD)
+        if route["build"]:
+            req.append(SP_VERIFY)
+    return dedupe(req[:1] + process + [s for s in req[1:] if s not in AFTER_WORK]
+                  + [s for s in req[1:] if s in AFTER_WORK])
 
 
 # --------------------------------------------------------------------------- 2. the command
@@ -311,6 +410,7 @@ TEST_CMD_RE = re.compile(
     r"\b(pytest|unittest|vitest|jest|mocha|playwright\s+test|(npm|pnpm|yarn|bun)\s+(run\s+)?test\w*|go\s+test"
     r"|cargo\s+test|gradlew?\s+[^|;&]*\b(test|connected\w*Test|check)\w*|xcodebuild\s+[^|;&]*\btest|phpunit"
     r"|rspec|dotnet\s+test|mvn\s+[^|;&]*\btest|ds\.py\s+run-tests)", re.I)
+E2E_CMD_RE = re.compile(r"\b(?:playwright\s+test|(?:npm|pnpm|yarn|bun)\s+(?:run\s+)?(?:e2e|test:e2e))\b", re.I)
 DB_CMD_RE = re.compile(
     r"\b(psql|mysql|sqlite3|mongosh|redis-cli|prisma\s+(migrate|db)|manage\.py\s+(migrate|makemigrations|flush|dbshell)"
     r"|alembic|flyway|liquibase|knex\s+migrate|sequelize\s+db|artisan\s+(migrate|db))\b", re.I)
@@ -358,7 +458,12 @@ def state_path(session_id):
 def load_state(session_id):
     try:
         with open(state_path(session_id)) as fh:
-            return json.load(fh)
+            state = json.load(fh)
+        # Older hook copies could persist code-documentation as a blocking requirement.
+        for key in ("last_request", "request_required"):
+            if key in state:
+                state[key] = [skill for skill in state[key] if skill != "code-documentation"]
+        return state
     except Exception:
         return {}
 
@@ -425,19 +530,22 @@ def loaded_skills(p, st=None):
 
 # --------------------------------------------------------------------------- routing of an edit
 def required_for(path, task=()):
-    """Skills a code edit needs: the three base skills plus what the user's requests in this session touch.
+    """Skills a code edit needs for the current request.
 
     Routing comes from the request (the prompt), never from class names or file contents; skills that
     belong after the work (verify-ui, review-code, verification) are left for the end of the request.
     """
-    return dedupe(list(BASE_EDIT) + [s for s in task if s not in AFTER_WORK])
+    return dedupe(["dev-orchestrate"] + [s for s in task if s not in AFTER_WORK] + BASE_EDIT[1:])
 
 
 def required_for_command(command, task=()):
     """Skills a Bash command needs by what it does; [] when it does nothing the gate cares about."""
     req = []
-    if TEST_CMD_RE.search(command):
+    e2e = E2E_CMD_RE.search(command)
+    if e2e or TEST_CMD_RE.search(command):
         req += ["dev-orchestrate", "test-safely"]
+        if e2e:
+            req.extend(skill for skill in task if skill in {"e2e-evidence", "verify-ui"})
     if DB_CMD_RE.search(command):
         req += ["dev-orchestrate", "change-database"]
     if COMMIT_RE.search(command):
@@ -453,14 +561,11 @@ def required_for_command(command, task=()):
 
 # --------------------------------------------------------------------------- hook commands
 RULE = (
-    "SKILL GATE: route skills by what the work touches (the request, the code it changes, the commands it "
-    "runs), not by file names. Load them with the Skill tool (never from memory), in this order: "
-    "dev-orchestrate (routing) -> the superpowers process skill (systematic-debugging for a bug, brainstorming "
-    "for a new feature, writing-plans for a multi-step plan, test-driven-development while implementing) -> "
-    "every devskills domain skill the work touches -> verification-before-completion + review-code before "
-    "handover. When both suites cover the same step, apply both: superpowers says how to work, devskills says "
-    "which rules the change must meet. Re-check when the work reaches a new area. Print `Skills: ...` before "
-    "the first edit and end with `Skills applied` listing ONLY skills actually loaded. Code edits and "
+    "SKILL GATE: load dev-orchestrate first with the Skill tool. Follow ROUTE-001/002 for process, domain, "
+    "implementation and verification phases. Route from the current request and confirmed effects. "
+    "Print `Skills: ...` before the first edit and list only loaded skills under `Skills applied`. "
+    "Load code-documentation for new code that needs documentation or when the user explicitly asks to add comments or docstrings, "
+    "if the skill is available. Keep the comments in scope. For routine maintenance, follow write-maintainable-code. Code edits and "
     "test/DB/commit commands are blocked until their skills are loaded."
 )
 
@@ -471,7 +576,7 @@ def cmd_prompt(p):
     areas, is_work = route["areas"], route["work"]
     needed = skills_for_request(route, superpowers_enabled())
     st = load_state(sid)
-    if is_work and not needed:
+    if is_work and route["follow_up"]:
         # A follow-up such as "ok làm đi" / "sửa luôn đi" names no area: it continues the previous request.
         needed = st.get("last_request", [])
         areas = [s for s in needed if s in PROMPT_AREAS]
@@ -479,17 +584,19 @@ def cmd_prompt(p):
         st["last_request"] = needed
     # Required by the end of THIS request only when it asks for work; a question gets a suggestion.
     st["request_required"] = needed if is_work else []
-    st["task_required"] = dedupe(st.get("task_required", []) + (needed if is_work else []))
     save_state(sid, st)
     text = RULE
     if needed:
         loaded = loaded_skills(p, st)
         todo = [s for s in needed if norm(s) not in loaded]
-        text += "\nThis request touches: %s." % ", ".join(areas)
+        if areas:
+            text += "\nThis request touches: %s." % ", ".join(areas)
         if todo:
-            text += (" %s with the Skill tool before working on it: %s (plus anything else it turns out to touch). "
+            text += (" %s each with the Skill tool before its phase: %s (plus any skill actual scope requires). "
                      "If one clearly does not apply, say why in one line." % ("Load" if is_work else "Likely load",
                                                                                 ", ".join(todo)))
+    if is_work and route["documentation"]:
+        text += "\nThis request explicitly adds code comments or docstrings. Load code-documentation if available."
     emit({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": text}})
 
 
@@ -601,7 +708,7 @@ def deny(reason):
 def cmd_gate(p):
     ti = p.get("tool_input") or {}
     st = load_state(p.get("session_id") or "")
-    task = st.get("task_required", [])
+    task = st.get("request_required", [])
     if p.get("tool_name") == "Bash":
         command = ti.get("command") or ""
         req = required_for_command(command, task)
@@ -618,8 +725,8 @@ def cmd_gate(p):
     loaded = loaded_skills(p, st)
     missing = [s for s in req if norm(s) not in loaded]
     if missing:
-        deny("SKILL GATE: your request touches %s. Before %s, load with the Skill tool (one call each, in "
-             "parallel): %s. Then state `Skills: ...` and retry." % (
+        deny("SKILL GATE: your request touches %s. Before %s, load with the Skill tool in this order: "
+             "%s. Then state `Skills: ...` and retry." % (
                  ", ".join(s for s in req if s not in BASE_EDIT) or "code", what, ", ".join(missing)))
     if p.get("tool_name") not in EDIT_TOOLS:
         return

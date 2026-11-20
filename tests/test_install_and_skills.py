@@ -18,7 +18,7 @@ class SkillPackageTest(unittest.TestCase):
     def test_all_skills_validate(self):
         completed = run_cli("validate-skills", str(REPO_ROOT / "skills"))
         self.assertEqual(completed.returncode, 0, completed.stdout)
-        self.assertEqual(len(SKILL_NAMES), 19)
+        self.assertEqual(len(SKILL_NAMES), 20)
 
     def test_shims_match_the_canonical_copy(self):
         canonical = (REPO_ROOT / "tools" / "ds_shim.py").read_bytes()
@@ -66,6 +66,25 @@ class InstallerTest(unittest.TestCase):
         recorded = (self.target / "test-safely" / "scripts" / "_runtime" / "PYTHON").read_text().strip()
         self.assertEqual(recorded, sys.executable, "without --with-venv the installing interpreter is used")
         self.assertFalse((self.backups / "no-venv-here").exists())
+
+    def test_shared_skill_name_warning_does_not_modify_previous_install(self):
+        home = make_temp_dir(self)
+        shared = write(home, ".agents/skills/test-safely/SKILL.md", "previous shared install")
+        env = dict(os.environ, HOME=str(home), USERPROFILE=str(home), DEVSKILLS_BACKUP_DIR=str(self.backups))
+
+        def run(*args):
+            return subprocess.run([sys.executable, str(INSTALLER), *args, "--target", "codex", "--skills", "test-safely"],
+                                  capture_output=True, text=True, env=env, check=False, timeout=30)
+
+        listing = run("install", "--dry-run")
+        self.assertEqual(listing.returncode, 0, listing.stderr)
+        self.assertIn("same skill names", listing.stdout)
+        self.assertFalse((home / ".codex").exists())
+        self.assertNotIn("same skill names", run("status").stdout)
+
+        self.assertEqual(run("install").returncode, 0)
+        self.assertIn("same skill names", run("status").stdout)
+        self.assertEqual(shared.read_text(encoding="utf-8"), "previous shared install")
 
     def test_optional_venv_is_created_once_and_used_by_the_shim(self):
         venv = make_temp_dir(self) / "skills-venv"
@@ -367,7 +386,7 @@ class InstallerTest(unittest.TestCase):
     def test_install_status_update_rollback_uninstall(self):
         installed = self.installer("install")
         self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
-        self.assertIn("19 skill(s) valid", installed.stdout)
+        self.assertIn("20 skill(s) valid", installed.stdout)
         skill = self.target / "dev-orchestrate"
         self.assertTrue((skill / "scripts" / "_runtime" / "devskills" / "cli.py").is_file())
         manifest = json.loads((skill / "scripts" / "_runtime" / "MANIFEST.json").read_text())

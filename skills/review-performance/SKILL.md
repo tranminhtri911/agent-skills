@@ -1,8 +1,8 @@
 ---
 name: review-performance
-description: "Use when code involves threads, thread pools, async/await, background workers, queues, large files or streams, caching, memory growth, CPU-heavy loops, N+1 queries or connection usage, or when something is slow, leaks memory, hangs, or exhausts connections or workers. Triggers (vi): chậm, tối ưu hiệu năng, tốn bộ nhớ, rò rỉ bộ nhớ, CPU cao, treo, lag, quá tải, cache, N+1. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when diagnosing slow code, resource growth or bottlenecks in threads, queries, caches, workers or large streams. Triggers (vi): chạy chậm, lag, treo, tối ưu hiệu năng, rò rỉ bộ nhớ, N+1, cache."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

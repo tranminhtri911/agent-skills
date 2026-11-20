@@ -1,8 +1,8 @@
 ---
 name: review-code
-description: "Use when reviewing a diff, pull request, merge request, commit, patch or a teammate's or AI-generated change, when asked to review or re-check a task before merge or handover, or when self-reviewing your own change before reporting it done. Triggers (vi): review code, review PR/MR, xem diff, kiểm tra lại trước khi merge, tự review, góp ý review. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when reviewing a code diff, PR, commit or implementation for behavior, safety and regression risk. Triggers (vi): review code, review PR, xem diff, tự review, kiểm tra code trước khi merge."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 
@@ -21,12 +21,12 @@ This skill is the method; the rules come from the skill that owns each area of t
 | queries, ORM, repositories, migrations, stored procedures, deletes, transactions, locks | change-database | atomicity and rollback, lock scope, N+1, IDX-008 plan evidence for large tables, migration vs running app |
 | endpoints, request/response, errors, webhooks | design-api | breaking changes, error format, idempotency, authorization |
 | services, jobs, batches, uploads | implement-backend | validate → authorize → use case path, job re-runs |
-| screens, components | implement-frontend, verify-ui | loading/error/empty states, accessibility, screenshots |
+| screen or component implementations | implement-frontend; verify-ui for rendered checks | loading/error/empty states, accessibility, screenshots |
 | auth, sessions, tenants, user input, secrets, payments | review-security | injection, missing authorization, tenant leaks, secrets in code |
 | threads, async, workers, caches, loops over many rows | review-performance | unbounded resources, blocking calls, missing timeouts |
 | external calls, retries, queues, job locks | design-reliability | duplicates, partial failure, unknown outcomes |
 | tests, seeds, fixtures | test-safely | tests that cannot fail, real side effects, mocked DB for DB behavior |
-| names, comments, structure | write-maintainable-code, code-style | unclear names, literals instead of enums, over-engineering, one-line `if`, opaque lambdas, needless `static`, a pattern missing where its signal is present |
+| names, comments, structure | write-maintainable-code, code-style, code-documentation for new code or explicitly requested comments | doc comments that state behavior the code does not have or that the change made outdated, redundant comments, unclear names, literals instead of enums, over-engineering, one-line `if`, opaque lambdas, needless `static`, a pattern missing where its signal is present |
 | Terraform, IAM, networks | design-infrastructure | wildcard permissions, public exposure |
 
 ## Procedure

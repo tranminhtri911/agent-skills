@@ -1,8 +1,8 @@
 ---
 name: discover-codebase
-description: "Use when about to change, specify or estimate work on code you have not fully traced — a new ticket, an unfamiliar feature, a rename or type change, a bug with an unclear cause, a question about which tables, screens or APIs a change affects, or a diff that grows beyond the files already read. Triggers (vi): code này chạy thế nào, ảnh hưởng tới đâu, bảng nào bị tác động, lỗi chưa rõ nguyên nhân, tính năng chưa quen, khả thi. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when tracing existing repository code, callers, data flow or the impact of a proposed change. Triggers (vi): đọc code, tìm code, code này chạy thế nào, luồng hiện tại, ảnh hưởng file nào, bảng nào bị tác động."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 
@@ -26,7 +26,7 @@ Build an evidence-based picture of a feature before editing: screens, routes, cl
 8. **Fill the context map** (`agent_must_fill`): confirmed entry points, call chain, invariants, transaction boundaries, other writers, external side effects, trust boundaries, facts seen in code vs assumptions vs unknowns, risk level.
    For maintenance/update/refactor, also identify the full old commit and working-tree snapshot, read the old implementations/callers, and record preserved cases versus requested differences (CHG-004/005). Specs support this comparison; report conflicts with observed old behavior before treating them as a change requirement. Details when write-maintainable-code is available: its `references/changing-existing-code.md`, preservation contract.
 9. **Decide the scope.** Files to change, files affected, confidence. If new findings require work beyond the user's request, explain the proposed expansion and wait for approval; continue the work already in scope (CTX-007, AGENT-012). A revised plan alone does not authorize unrelated changes.
-10. **Route the next skills.** The map decides them, not the wording of the task — load each with the Skill tool before analyzing or editing that part: tables written, deletes, transactions or locks → change-database; routes and contracts → design-api; services, jobs, batches → implement-backend; screens → implement-frontend and verify-ui; external calls or jobs that must not die halfway → design-reliability; auth, tenants, user input → review-security; loops over many rows, workers, caches → review-performance; tests or test data → test-safely. Name them in the output.
+10. **Route the next skills.** Use the confirmed behavior, risk and requested next step with dev-orchestrate's ROUTE-001. Load each owner before working in its area and name the owners in the output.
 
 ## Rules
 

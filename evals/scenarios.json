@@ -261,6 +261,12 @@
       "skill": "task-spec",
       "task": "Tạo spec cho task no80 (branch fix/no80): yêu cầu khách hàng dán trong prompt, chưa có folder specs/no80",
       "expect": "loads task-spec with discover-codebase, design-change and test-safely; runs `spec init` and pastes the requirement verbatim into specs/no80/require.md with only a source line; reads the code along the flow before writing the plan JSON in a scratch file with every standard block (current and target flow with diagrams, target nodes marked new/changed, changes per file as child items, impact, verify, tests, risks, confirm items with owner/status, estimate assumptions, deploy), one fact per line; splits sub tasks of 0.5-4h with depends_on and writes sub_tasks/taskNN_<slug>.md with Overview/Implementation/Unit test/E2E test/Verify; writes the checklist in the e2e-evidence schema (no80-TCnn, vi/en/ja); runs `spec build --plan … --checklist …` until it passes and leaves no JSON in the folder; reports open questions, total estimate and assumptions; does not start implementing (SPEC-001..009)"
+    },
+    {
+      "id": "EV55",
+      "skill": "code-documentation",
+      "task": "Thêm API POST /api/orders/{id}/cancel và job gửi email hủy đơn; viết comment cho code mới",
+      "expect": "loads code-documentation with write-maintainable-code, code-style, design-api, implement-backend and design-reliability; reads the handler, exception filters and queue/scheduler config before writing docs; documents the endpoint purpose, path, auth, response and only the status codes the handler and framework actually return, and the job's trigger, retry and side effects exactly as configured (no invented retry counts or schedules); uses the repository's existing doc style (Target blocks only if the project uses them) and the language's native syntax; adds no comments to trivial getters, unrelated files or existing methods the change only updates; corrects only an existing comment the change made false; runs the DOC-012 checklist before handover (DOC-007..012)"
     }
   ]
 }

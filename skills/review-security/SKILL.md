@@ -1,8 +1,8 @@
 ---
 name: review-security
-description: "Use when code handles authentication, authorization, sessions, tenants, user input, file uploads, URLs fetched by the server, redirects, templates, SQL/NoSQL queries, secrets, tokens, cookies, CORS, payments or personal data, when adding rate limits, or before handing over any change that crosses a trust boundary. Triggers (vi): bảo mật, đăng nhập, phân quyền, token, mật khẩu, dữ liệu cá nhân, upload file, XSS, SQL injection, giới hạn request, lộ secret. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when code crosses a trust boundary or handles authentication, authorization, tenants, user input, uploads, payments or secrets. Triggers (vi): bảo mật, đăng nhập, phân quyền, token, dữ liệu cá nhân, XSS, lộ secret."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 

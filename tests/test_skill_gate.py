@@ -41,7 +41,7 @@ class PromptRoutingTest(unittest.TestCase):
         ("lên kế hoạch triển khai bản iOS", ["design-change", SP + "writing-plans", "implement-frontend"], []),
         ("sửa theo góp ý của codex review", [SP + "receiving-code-review"], []),
         ("trang danh sách tải chậm quá, tối ưu giúp", ["review-performance", "change-database", "implement-frontend"], []),
-        ("viết test e2e cho màn hình lịch", ["test-safely", "implement-frontend"], []),
+        ("viết test e2e cho màn hình lịch", ["test-safely"], ["implement-frontend", "verify-ui", "e2e-evidence"]),
         ("tạo VPC và RDS bằng terraform", ["design-infrastructure"], []),
     ]
 
@@ -141,11 +141,15 @@ class SkillDescriptionTest(unittest.TestCase):
 
     def test_every_skill_lists_vietnamese_triggers_within_the_listing_budget(self):
         import re
+        trigger_lists = set()
         for path in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
             description = re.search(r'^description: "(.*)"$', path.read_text(encoding="utf-8"), re.M).group(1)
             description = description.replace('\\"', '"')
             self.assertIn("Triggers (vi):", description, path.parent.name)
-            self.assertIn("làm sao", description, f"{path.parent.name}: question-phrased requests must trigger too")
+            self.assertNotIn("Repo questions: làm sao sửa/kiểm tra?", description, path.parent.name)
+            triggers = description.split("Triggers (vi):", 1)[1].strip()
+            self.assertNotIn(triggers, trigger_lists, path.parent.name)
+            trigger_lists.add(triggers)
             self.assertLessEqual(len(description), 600, f"{path.parent.name}: the tail (Vietnamese triggers) gets truncated")
 
 
@@ -206,10 +210,68 @@ class HookEndToEndTest(unittest.TestCase):
         self.assertIn("design-api", blocked["reason"])
         self.assertNotIn(SP, blocked["reason"], "no superpowers requirement when the plugin is disabled")
 
+    def test_independent_work_does_not_inherit_previous_domain_requirements(self):
+        self.hook("prompt", prompt="Sửa API và migration DB")
+        self.hook("prompt", prompt="Sửa lỗi")
+        self.load(*BASE, "test-safely", "review-code")
+        edit = {"file_path": "app/style.py", "new_string": "return False"}
+        self.assertIsNone(self.hook("gate", tool_name="Edit", tool_input=edit))
+        self.assertIsNone(self.hook("stop"))
+        self.hook("prompt", prompt="Đọc docs")
+        self.assertIn("index-project-knowledge", self.hook("stop")["reason"])
+
+    def test_edit_denial_orders_router_process_and_domain(self):
+        self.enable_superpowers(True)
+        self.hook("prompt", prompt="Sửa lỗi truy vấn")
+        edit = {"file_path": "app/service.py", "new_string": "return []"}
+        reason = self.hook("gate", tool_name="Edit", tool_input=edit)["hookSpecificOutput"]["permissionDecisionReason"]
+        order = reason.split("in this order: ", 1)[1]
+        expected = ["dev-orchestrate", SP + "systematic-debugging", "discover-codebase", "change-database",
+                    SP + "test-driven-development"]
+        self.assertEqual([name for name in order.split(". Then", 1)[0].split(", ") if name in expected], expected)
+
     def test_a_question_never_blocks(self):
         self.enable_superpowers(True)
         self.hook("prompt", prompt="vì sao claude dùng ít skills vậy")
         self.say("Because ...")
+        self.assertIsNone(self.hook("stop"))
+
+    def test_maintenance_can_edit_and_finish_without_code_documentation(self):
+        self.hook("prompt", prompt="Sửa docstring của hàm cũ theo giới hạn mới")
+        self.load(*BASE, "test-safely", "review-code")
+        edit = {"file_path": "app/rates.py", "old_string": "max_retries = 3", "new_string": "max_retries = 5"}
+        self.assertIsNone(self.hook("gate", tool_name="Edit", tool_input=edit))
+        self.assertIsNone(self.hook("stop"))
+
+    def test_new_declarations_get_documentation_guidance(self):
+        context = self.hook("prompt", prompt="Thêm hàm tính phí mới vào module hiện tại")
+        self.assertIn("Load code-documentation for new code that needs documentation", context["hookSpecificOutput"]["additionalContext"])
+        self.load(*BASE, "test-safely")
+        edit = {"file_path": "app/rates.py", "old_string": "from decimal import Decimal\n",
+                "new_string": "from decimal import Decimal\n\ndef calculate_fee(rate):\n    return rate * Decimal('0.1')\n"}
+        self.assertIsNone(self.hook("gate", tool_name="Edit", tool_input=edit))
+
+    def test_prompt_can_request_comments_on_existing_code(self):
+        context = self.hook("prompt", prompt="Thêm comment giải thích cách làm tròn trong hàm tính phí hiện có")
+        guidance = context["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("This request explicitly adds code comments or docstrings", guidance)
+        self.load(*BASE, "test-safely", "review-code")
+        self.assertIsNone(self.hook("stop"))
+
+    def test_previous_documentation_requirement_does_not_block_after_update(self):
+        required = ["code-documentation", "design-api"]
+        write(self.home, ".claude/state/skill-gate/s1.json", json.dumps({
+            "last_request": required, "request_required": required, "task_required": required,
+        }))
+        self.load(*BASE)
+        edit = {"file_path": "app/rates.py", "old_string": "return 3", "new_string": "return 5"}
+        reason = self.hook("gate", tool_name="Edit", tool_input=edit)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("design-api", reason)
+        self.assertNotIn("code-documentation", reason)
+        self.load("design-api")
+        self.assertIsNone(self.hook("stop"))
+        self.hook("prompt", prompt="ok làm đi")
+        self.assertIsNone(self.hook("gate", tool_name="Edit", tool_input=edit))
         self.assertIsNone(self.hook("stop"))
 
     def test_code_edit_is_denied_until_the_requests_skills_are_loaded(self):
@@ -233,6 +295,16 @@ class HookEndToEndTest(unittest.TestCase):
         self.load("dev-orchestrate", "test-safely")
         self.assertIsNone(self.hook("gate", **command))
         self.assertIsNone(self.hook("gate", tool_name="Bash", tool_input={"command": "git status"}))
+
+    def test_ui_e2e_checks_are_loaded_before_the_run(self):
+        self.hook("prompt", prompt="Chạy E2E UI")
+        self.load("dev-orchestrate", "test-safely")
+        command = {"tool_name": "Bash", "tool_input": {"command": "npm run e2e"}}
+        reason = self.hook("gate", **command)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("verify-ui", reason)
+        self.assertIn("e2e-evidence", reason)
+        self.load("e2e-evidence", "verify-ui")
+        self.assertIsNone(self.hook("gate", **command))
 
     def test_skills_applied_naming_an_unloaded_skill_is_blocked(self):
         self.load("dev-orchestrate")

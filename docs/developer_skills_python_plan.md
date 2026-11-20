@@ -414,9 +414,9 @@ Example: disabling a submit button only improves UX. Duplicate submission needs 
 
 Readers need **reasons** and **usage contracts**, not a comment on every line.
 
-- **DOC-001 MUST:** Briefly document public APIs, difficult business functions, transaction/lock/retry logic, and non-obvious algorithms.
+- **DOC-001 MUST:** Briefly document new public APIs, difficult business functions, transaction/lock/retry logic, and non-obvious algorithms when they need explanation. Apply code-documentation to those additions and when the user explicitly asks to add comments or docstrings, including on existing code.
 - **DOC-002 MUST:** State input constraints, outputs, errors, and side effects not fully explained by types/names.
-- **DOC-003 MUST:** Update comments with code; remove incorrect comments and obsolete commented-out code.
+- **DOC-003 MUST:** During maintenance, correct or remove only comments made inaccurate by the change, even outside the changed lines. Preserve other existing comments unless the user requests documentation changes.
 - **DOC-004 SHOULD:** TODOs include a reason and issue/owner; no indefinite “fix later.”
 - **DOC-005 MUST:** Use valid multiline-comment syntax from the table below.
 - **DOC-006 SHOULD:** Follow the repository's comment language; prefer English identifiers for international collaboration.

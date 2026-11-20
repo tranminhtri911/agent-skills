@@ -1,8 +1,8 @@
 ---
 name: dev-orchestrate
-description: "Use when working on any development task or ticket for an application (backend, frontend, API, database, jobs, infrastructure), in any language — requirements, impact or feasibility, planning or specifying, implementing a feature, bugfix or refactor, tests, review, commit or reporting results. Triggers (vi): làm task, ticket, thêm chức năng, sửa lỗi, triển khai, phân tích tác động, viết spec, test, review, commit, báo cáo kết quả. Repository-specific questions are in scope; pure conceptual questions do not require the implementation workflow. Repo questions: làm sao sửa/kiểm tra?"
+description: "Use when a repository task needs routing, from a question about its code to a ticket, fix, test, review or commit. Start here, then apply the skills for the requested work. Triggers (vi): làm task, sửa lỗi, tính năng, test, review, commit. General programming questions can be answered directly."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   suite: devskills
 ---
 
@@ -14,19 +14,21 @@ Every code change goes through scope → context → design → implement → ve
 
 ## Skill routing — scoped loading (ROUTE-001)
 
-For repository development, load this router first. Select domain skills from the actual changed behavior, commands and risk, not keywords alone. Load the owning skill before working in its area, once per session; load deeper references only when needed. A mention of a database in a typo fix does not make it a database change. Queries, locks, migrations, payments, permissions and external effects always require their safety skills regardless of diff size.
+Load this router first for repository work. Identify the requested action (inspect, plan, change, test or review), then the affected behavior, commands and risk. Use short keywords to find candidate skills. Load each owner once per session, before its phase, and open its references as needed. Queries, locks, migrations, payments, permissions and external effects always require their safety skills regardless of diff size.
 
-- Unfamiliar code → discover-codebase; design choices or R2+ → design-change.
+- Read or trace existing code → discover-codebase. Compare approaches, assess impact or plan a change → design-change.
 - SQL/ORM/data integrity → change-database; endpoint contracts → design-api.
 - Server logic → implement-backend.
 - UI development and maintenance → `implement-frontend`. Start with the project's comparable screens and design patterns (CTX-009). Load the available `ui-ux-pro-max` for design decisions only where the project lacks a suitable pattern (FE-014).
 - Rendered UI verification, UX review, responsive defect diagnosis and every UI E2E run → `verify-ui` and `ui-ux-pro-max`, including review-only requests (FE-010, FE-014). Visible changes receive this verification before handover. If `ui-ux-pro-max` is unavailable, record that and use the local visual checklist. Load `implement-frontend` when the task includes a fix or implementation.
 - Remote calls/retries/jobs → design-reliability; concurrency/resource use → review-performance.
-- Trust boundaries/secrets/permissions → review-security; tests → test-safely.
+- Trust boundaries, secrets and permissions → review-security.
 - A plan/spec for a ticket from its requirement (`specs/<task>/require.md` → plan.html, sub tasks, checklist) → task-spec (with design-change).
-- Running or verifying E2E/manual test cases by checklist, with screenshots per step, OK/NG summaries and the evidence report → e2e-evidence (with test-safely).
-- Infrastructure → design-infrastructure; source edits → write-maintainable-code and code-style.
+- Writing automated tests → test-safely. Executing or reporting E2E/manual cases with per-step evidence → e2e-evidence alongside test-safely. Rendered UI runs also apply the UI verification rule above.
+- Infrastructure → design-infrastructure; source edits → write-maintainable-code and code-style. Write-maintainable-code owns behavior preservation, structure and comment upkeep. Code-style owns naming, formatting and language patterns. When available, load code-documentation for new code that needs documentation and for explicit requests to add comments or docstrings.
 - Project document search/updates → index-project-knowledge; diff review → review-code.
+
+**Order with superpowers, one plan per task (ROUTE-002).** Start with this router. Apply the relevant superpowers process (debugging, brainstorming or planning), then the owners for the current phase. Apply test-driven-development when implementing behavior and verification-before-completion and review-code before handover. For a ticket spec, task-spec owns `specs/<task>/plan.html` and replaces brainstorming and writing-plans. For other written plans, use the location chosen by design-change. Put the design and plan in that one document even when superpowers suggests `docs/superpowers/`.
 
 Small conceptual questions without repository work receive a direct answer, without a development run. State selected skills briefly and finish repository work with `Skills applied` and applicable rule IDs. A project can document narrower routing for unrelated areas; it cannot waive safety for actual cloud, remote DB, money or permission operations.
 
@@ -45,7 +47,7 @@ Small conceptual questions without repository work receive a direct answer, with
 1. **Understand before editing.** Trace entry point → callers → classes/functions/variables → data → side effects (REQUIRED: discover-codebase). Never change important logic from a name or a snippet.
 2. **Recommend like a senior.** Separate facts, assumptions and unknowns; give options, tradeoffs, risks, verification and recovery (REQUIRED for R2+: design-change).
 3. **Learn and reuse the project's base first (CTX-009).** Before writing, open the project-owned base classes, shared helpers, custom hooks, house decorators and one finished reference module of the same kind (`inspect` lists them under "Project conventions"); new code imitates them. Domain values (status, type, role, limits, URLs, messages) come from the project's enums/constants/config/i18n, never bare literals (CODE-011). Patterns and layering are learned from the source too (`patterns in use`); no new layers, libraries, bases or patterns without a named problem the existing ones do not solve (DES-007, DES-008) — no over-engineering.
-4. **Readable code.** Explicit names, small functions, comments that explain why plus input/output/errors of non-obvious contracts; comments follow the repository and language conventions (write-maintainable-code); naming, layout and pattern choice follow the language and framework (code-style).
+4. **Readable code.** Use explicit names and small functions. Document the rationale and verified contracts of new code where needed (code-documentation). For maintenance, follow write-maintainable-code and preserve comments that remain accurate. Follow code-style for naming, layout and patterns.
 5. **Existing architecture first.** Follow the repository’s layers and module layout; introduce a service/repository or feature folder only for a concrete responsibility (implement-backend, implement-frontend).
 6. **Bounded resources.** Thread pools not unbounded threads, timeouts on every remote call, cleanup on every path, no leaks (review-performance).
 7. **Databases.** Shared engine/pool, one session per request/job, short transactions, multi-step writes atomic with automatic rollback, indexes from real queries, FK policy follows project conventions with integrity designed explicitly (change-database).
