@@ -255,6 +255,12 @@
       "skill": "e2e-evidence",
       "task": "Chạy test e2e cho task no63_5 (branch fix/no63_5); chưa có checklist trong thư mục evidence",
       "expect": "loads e2e-evidence with test-safely; runs `evidence init` (task folder, evidence root added to .gitignore); builds checklist.json from the branch diff, ticket docs, existing tests and the older checklist of the task, with <task>-TCnn ids, concrete data and exact expected results in vi/en/ja, renders checklist.html with case folders; classifies the target and asks approval (OPS-013) before any step on staging or a local container that serves shared data, listing cases, data changes and calendar/email effects; never reads .env for logins; after running, verifies every screenshot, renames images stepNN_<what-is-shown>.png, writes summary_<case-id>.md with OK/NG/PARTIAL/BLOCKED/NOT_RUN and runs `evidence report` (one report.html per task); never reports OK for a step without a screenshot (E2E-001..007)"
+    },
+    {
+      "id": "EV54",
+      "skill": "task-spec",
+      "task": "Tạo spec cho task no80 (branch fix/no80): yêu cầu khách hàng dán trong prompt, chưa có folder specs/no80",
+      "expect": "loads task-spec with discover-codebase, design-change and test-safely; runs `spec init` and pastes the requirement verbatim into specs/no80/require.md with only a source line; reads the code along the flow before writing the plan JSON in a scratch file with every standard block (current and target flow with diagrams, target nodes marked new/changed, changes per file as child items, impact, verify, tests, risks, confirm items with owner/status, estimate assumptions, deploy), one fact per line; splits sub tasks of 0.5-4h with depends_on and writes sub_tasks/taskNN_<slug>.md with Overview/Implementation/Unit test/E2E test/Verify; writes the checklist in the e2e-evidence schema (no80-TCnn, vi/en/ja); runs `spec build --plan … --checklist …` until it passes and leaves no JSON in the folder; reports open questions, total estimate and assumptions; does not start implementing (SPEC-001..009)"
     }
   ]
 }

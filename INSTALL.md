@@ -17,7 +17,7 @@ python3 agent-skills.py help install
 ## 2. Installation
 
 ```bash
-# Install 18 skills, the routing rule and the skill gate; no third-party UI tool by default
+# Install 19 skills, the routing rule and the skill gate; no third-party UI tool by default
 python3 agent-skills.py install
 # Opt into an exact reviewed UI CLI release (replace X.Y.Z)
 python3 agent-skills.py install --with-ui-ux-pro-max --ui-ux-version X.Y.Z

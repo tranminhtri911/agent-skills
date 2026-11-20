@@ -404,6 +404,29 @@ ds.py help <command> shows a command's options. Exit codes: 0 pass, 2 usage erro
     evidence_checklist.add_argument("--task", required=True, help="task folder whose checklist.json is rendered")
     evidence_report.add_argument("--task", help="report one task (default: every task under the root)")
 
+    spec = commands.add_parser("spec", help="task specs from require.md: init, build (plan.html, sub_tasks, checklist.html), source")
+    spec_actions = spec.add_subparsers(dest="spec_action", required=True, metavar="ACTION")
+    spec_init = spec_actions.add_parser("init", help="create <specs>/<task>/ with a require.md template and sub_tasks/")
+    spec_build = spec_actions.add_parser(
+        "build", help="validate the plan, sub task files and checklist; write plan.html and checklist.html (data embedded)")
+    spec_source = spec_actions.add_parser("source", help="print the plan or checklist JSON embedded in the task's page")
+    spec_build.add_argument("--plan", metavar="FILE", help="plan JSON written outside the task folder (default: the data in plan.html)")
+    spec_build.add_argument("--checklist", metavar="FILE",
+                            help="checklist JSON, e2e-evidence schema (default: the data in checklist.html)")
+    spec_source.add_argument("--part", choices=["plan", "checklist"], default="plan", help="which page's data to print")
+    spec_source.add_argument("--out", metavar="FILE", help="write the JSON to FILE instead of printing it")
+    spec_source.add_argument("--repo", help="repository root (default: git top-level of the current directory)")
+    spec_source.set_defaults(handler="devskills.spec:cmd_source")
+    for action_parser in (spec_init, spec_build, spec_source):
+        action_parser.add_argument("--root", metavar="DIR",
+                                   help="specs root (default: .devskills.toml [spec].root, an existing specs/ or docs/specs/, "
+                                        "else specs/)")
+        action_parser.add_argument("--task", required=True, help="ticket or task id, one folder per task, e.g. no63_5")
+    for action_parser, handler, check_id in ((spec_init, "devskills.spec:cmd_init", "spec.init"),
+                                             (spec_build, "devskills.spec:cmd_build", "spec.plan")):
+        _add_common(action_parser, record_check_id=check_id)
+        action_parser.set_defaults(handler=handler)
+
     guard = commands.add_parser("guard", help="PreToolUse hook: deny/ask for dangerous shell commands")
     guard.add_argument("--check", metavar="COMMAND", help="evaluate one command instead of reading hook JSON from stdin")
     guard.add_argument("--mode", choices=["standard", "strict", "ask"], default="standard",

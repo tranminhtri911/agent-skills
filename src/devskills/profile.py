@@ -54,6 +54,10 @@ DEFAULT_PROFILE: dict[str, Any] = {
         # E2E/manual test evidence root relative to the repository, e.g. "deploy/evidence"; "" = auto-detect.
         "root": "",
     },
+    "spec": {
+        # Task specs root (require.md, plan.html, sub_tasks/, checklist.html per task), e.g. "specs"; "" = auto-detect.
+        "root": "",
+    },
 }
 
 _ALLOWED_CHOICES: dict[tuple[str, str], frozenset[str]] = {

@@ -2,7 +2,7 @@
 name: code-style
 description: "Use when writing, modifying or reviewing source code in any language or framework — naming variables, functions, classes, files and constants, laying out if/else and loops, lambdas, comprehensions and chains, static members, or choosing repository, builder, interface, abstract class, strategy or factory. Triggers (vi): đặt tên biến/hàm/class, coding style, convention, code dễ đọc, tường minh, if một dòng, lambda, static, interface, abstract, repository pattern, builder pattern. Repo questions: làm sao sửa/kiểm tra?"
 metadata:
-  version: "1.0.4"
+  version: "1.0.5"
   suite: devskills
 ---
 

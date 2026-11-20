@@ -34,7 +34,7 @@ ALL_SKILLS = [
     "design-api", "implement-backend", "implement-frontend", "verify-ui",
     "design-reliability", "review-performance", "review-security", "test-safely",
     "design-infrastructure", "write-maintainable-code", "code-style", "index-project-knowledge",
-    "review-code", "e2e-evidence",
+    "review-code", "e2e-evidence", "task-spec",
 ]
 BASE_EDIT = ["dev-orchestrate", "discover-codebase", "write-maintainable-code", "code-style"]
 
@@ -139,6 +139,11 @@ PROMPT_AREAS = {
         "test", "kiem thu", "e2e", "unit test", "playwright", "tdd", "mock", "seed", "chay test",
         "viet test", "regression", "fixture",
         "kiem chung", "tai hien", "reproduce", "repro", "smoke test", "integration test", "snapshot test",
+    ],
+    "task-spec": [
+        # A ticket's written plan from its requirement, not code work itself.
+        "require.md", "plan.html", "sub task", "sub_tasks", "subtask", "tao spec", "viet spec", "len plan",
+        "viet plan", "tao plan", "chia task", "break task", "phan tich yeu cau", "estimate task",
     ],
     "e2e-evidence": [
         # Running or verifying a test checklist with screenshots, not writing unit tests.

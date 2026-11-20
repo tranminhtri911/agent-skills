@@ -2,6 +2,14 @@
 
 Every committed change bumps the suite version by one patch step (1.0.0 → 1.0.1 → 1.0.2) in `pyproject.toml`, `src/devskills/__init__.py`, every `skills/*/SKILL.md` `metadata.version` and a section below; `SuiteVersionTest` fails when they disagree.
 
+## 1.0.5 (2026-11-19)
+
+- New `task-spec` skill (19th): one folder per task under the specs root turns a verbatim `require.md` into `plan.html` (overview with requirement mapping, current and target flow with diagrams, changes, impact, sub tasks, verify, tests, risks, questions to confirm, estimate, deploy — one block per page, small nested collapsible items, stat cards, step bar, light/dark), small `sub_tasks/taskNN_<slug>.md` files (overview, implementation, unit test, E2E test, verify) and a vi/en/ja `checklist.html` in the e2e-evidence schema (rules SPEC-001..009, scenario EV54). The folder keeps no JSON: pages embed their data.
+- `ds.py spec init|build|source`: creates the task folder with a short `require.md`, validates the plan (flow diagrams required, readability limits on lines, cells and items), the sub task files and the checklist, sums total and remaining estimate, renders `plan.html` (inline SVG flow diagrams, offline) and `checklist.html`, and prints the embedded JSON back for the next edit. `.devskills.toml [spec] root` names the specs root.
+- dev-orchestrate, design-change, e2e-evidence and the skill gate route plan/spec work to `task-spec`; e2e-evidence takes a spec's cases with `spec source --part checklist`.
+- e2e-evidence: `checklist.html` uses the plan look (hero with live stats for ticked steps, OK, NG and untested; one card per case with preconditions and test data side by side; pill OK/NG toggles) and embeds its full data; summaries and plans render nested lists.
+- e2e-evidence: `report.html` uses the same plan look — hero with the verdict and six stat cards, an overview card grouping every case NG → BLOCKED → PARTIAL → NOT RUN → OK (stacked rows on phones), one card per case with reason, conclusion, preconditions and test data, and one card per step with its result, expected and observed values and its own screenshot grid.
+
 ## 1.0.4 (2026-11-19)
 
 - New `e2e-evidence` skill (18th): E2E and manual test runs by checklist leave the same evidence — a vi/en/ja `checklist.html` (left menu, collapsible cases with checkboxes, pages with totals) generated from the branch/prompt when missing, one folder per case with a screenshot per step, `summary_<case-id>.md` with an OK/NG/PARTIAL/BLOCKED/NOT_RUN result, one `report.html` per task — every case OK/NG with its reason and links first, then each case's checklist steps with the recorded result, observation and screenshots — under a gitignored evidence root (rules E2E-001..010, scenario EV53). Learned from a real manual run's evidence folder.

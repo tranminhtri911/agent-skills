@@ -1,0 +1,308 @@
+{
+  "schema": "devskills.task-plan/1",
+  "task": "demo42",
+  "title": "demo42 — Giá cả ngày cho thiết bị trong ghi chú lịch",
+  "summary": "Synthetic example. Khi phòng áp dụng giá cả ngày, thiết bị bật 「áp dụng giá cả ngày」 tính cái đầu tiên theo giá cả ngày, từ cái thứ hai theo giá thường; dòng thiết bị trong カレンダーメモ phải ghi đúng như vậy.",
+  "source": {
+    "branch": "fix/demo42",
+    "base": "main",
+    "ticket": "DEMO-42"
+  },
+  "blocks": [
+    {
+      "id": "overview",
+      "items": [
+        {
+          "title": "Mục tiêu",
+          "body": "Dòng ◆備品 của カレンダーメモ ghi giá cả ngày cho cái đầu tiên khi booking áp dụng giá cả ngày, giống chi tiết booking và PDF."
+        },
+        {
+          "title": "Đối chiếu với require.md",
+          "body": "| Yêu cầu (require.md) | Phần của plan |\n|---|---|\n| Memo phải có giá cả ngày | Cách sửa → BookingMemo |\n| PDF / chi tiết đã đúng, chỉ đối chiếu | Cách test → TC01 step 8-9 |"
+        },
+        {
+          "title": "Phạm vi",
+          "body": "- Trong phạm vi: màn hình tạo và sửa booking, memo gửi lên lịch.\n- Ngoài phạm vi: cách tính giá (đã có), PDF, booking đã lưu trước khi deploy (không tự đổi)."
+        }
+      ]
+    },
+    {
+      "id": "current_flow",
+      "items": [
+        {
+          "title": "Tạo / sửa booking (main)",
+          "body": "- Memo ghi mỗi thiết bị một dòng giá thường.\n- `buildMemo()` không nhận kết quả estimate nên không biết giá cả ngày.",
+          "diagram": {
+            "nodes": [
+              {
+                "id": "form",
+                "label": "Form 案件登録 / 編集",
+                "kind": "start"
+              },
+              {
+                "id": "estimate",
+                "label": "estimate()\ntính giá (đã có 終日)",
+                "kind": "step"
+              },
+              {
+                "id": "memo",
+                "label": "buildMemo()\n・Tên(giá thường)×n",
+                "kind": "step"
+              },
+              {
+                "id": "save",
+                "label": "Lưu booking",
+                "kind": "data"
+              },
+              {
+                "id": "calendar",
+                "label": "Google Calendar",
+                "kind": "external"
+              }
+            ],
+            "edges": [
+              {
+                "from": "form",
+                "to": "estimate",
+                "label": "đổi giờ / thiết bị"
+              },
+              {
+                "from": "estimate",
+                "to": "memo"
+              },
+              {
+                "from": "memo",
+                "to": "save",
+                "label": "登録する"
+              },
+              {
+                "from": "save",
+                "to": "calendar",
+                "label": "job đồng bộ"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "target_flow",
+      "items": [
+        {
+          "title": "Sau khi sửa",
+          "body": "- `buildMemo()` nhận `estimate.rows`.\n- Mở 編集 không build lại memo.",
+          "diagram": {
+            "nodes": [
+              {
+                "id": "form",
+                "label": "Form 案件登録 / 編集",
+                "kind": "start"
+              },
+              {
+                "id": "changed",
+                "label": "Giờ hoặc thiết bị đổi?",
+                "kind": "decision",
+                "state": "new"
+              },
+              {
+                "id": "estimate",
+                "label": "estimate()",
+                "kind": "step"
+              },
+              {
+                "id": "memo",
+                "label": "buildMemo(estimateRows)\n終日 ×1 + giá thường ×(n-1)",
+                "kind": "step",
+                "state": "changed"
+              },
+              {
+                "id": "keep",
+                "label": "Giữ memo đã lưu",
+                "kind": "step",
+                "state": "new"
+              },
+              {
+                "id": "save",
+                "label": "Lưu booking",
+                "kind": "data"
+              },
+              {
+                "id": "calendar",
+                "label": "Google Calendar",
+                "kind": "external"
+              }
+            ],
+            "edges": [
+              {
+                "from": "form",
+                "to": "changed"
+              },
+              {
+                "from": "changed",
+                "to": "estimate",
+                "label": "có"
+              },
+              {
+                "from": "changed",
+                "to": "keep",
+                "label": "không"
+              },
+              {
+                "from": "estimate",
+                "to": "memo"
+              },
+              {
+                "from": "memo",
+                "to": "save"
+              },
+              {
+                "from": "keep",
+                "to": "save"
+              },
+              {
+                "from": "save",
+                "to": "calendar",
+                "label": "job đồng bộ"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "changes",
+      "items": [
+        {
+          "title": "resources/js/utils/buildMemo.ts",
+          "items": [
+            {
+              "title": "Tham số mới",
+              "body": "- `estimateRows: EstimateRow[]` (type có sẵn trong `types/estimate.ts`)."
+            },
+            {
+              "title": "Dòng thiết bị có giá cả ngày",
+              "body": "- Ghi `・Tên(giá cả ngày)×1`.\n- Rồi `・Tên(giá thường)×(n-1)` nếu n > 1."
+            },
+            {
+              "title": "Giữ nguyên",
+              "body": "- Format các dòng khác.\n- Hàm `formatYen`."
+            }
+          ]
+        },
+        {
+          "title": "BookingForm (Create / Edit)",
+          "body": "- Truyền `estimate.rows` vào `buildMemo()`.\n- Chỉ gọi lại khi giờ hoặc thiết bị đổi."
+        }
+      ]
+    },
+    {
+      "id": "impact",
+      "items": [
+        {
+          "title": "Logic hiện tại",
+          "body": "Chỉ đổi nội dung memo. Cách tính giá, PDF, chi tiết booking không đổi."
+        },
+        {
+          "title": "Source / module khác dùng buildMemo",
+          "body": "`grep buildMemo`: 2 nơi (Create, Edit). Không có job hay API nào khác gọi."
+        },
+        {
+          "title": "Dữ liệu đã lưu",
+          "body": "Không migration. Booking cũ giữ memo cũ cho tới khi người dùng sửa."
+        }
+      ]
+    },
+    {
+      "id": "verify",
+      "items": [
+        {
+          "title": "Verify trên local",
+          "body": "Tạo booking 8:00-20:00 với DEMO Projector × 3 → memo `(1,100円)×1` / `(550円)×2`; đổi 10:00-12:00 → `(550円)×3`; so với chi tiết booking và PDF."
+        }
+      ]
+    },
+    {
+      "id": "test",
+      "items": [
+        {
+          "title": "Unit test",
+          "body": "`buildMemo.test.ts`: cả ngày × 1, × 3; không cả ngày; thiết bị không bật cả ngày; nhiều thiết bị."
+        },
+        {
+          "title": "E2E / thủ công",
+          "body": "Theo checklist.html (TC01, TC02). Chạy và lưu evidence bằng skill e2e-evidence."
+        }
+      ]
+    },
+    {
+      "id": "risks",
+      "items": [
+        {
+          "title": "Memo của booking cũ bị đổi khi chỉ mở màn hình sửa",
+          "body": "Chỉ build lại memo khi thiết bị hoặc giờ đổi; test riêng trường hợp mở rồi lưu không sửa."
+        }
+      ]
+    },
+    {
+      "id": "confirm",
+      "items": [
+        {
+          "title": "Có cần sửa memo của booking cũ hàng loạt không?",
+          "body": "Đề xuất: không. Booking cũ đổi khi người dùng sửa.",
+          "status": "open",
+          "owner": "PO"
+        },
+        {
+          "title": "Giá trong memo là giá đã gồm thuế?",
+          "body": "Đã xác nhận: gồm thuế, như các dòng hiện tại.",
+          "status": "answered"
+        }
+      ]
+    },
+    {
+      "id": "estimate",
+      "items": [
+        {
+          "title": "Giả định",
+          "body": "1 developer, 8 giờ / ngày, đã có môi trường local."
+        }
+      ]
+    },
+    {
+      "id": "deploy",
+      "items": [
+        {
+          "title": "Các bước",
+          "body": "1. Merge PR, build frontend.\n2. Deploy như release thường, không migration.\n3. Kiểm tra 1 booking test trên STG theo TC01.\n4. Rollback: deploy lại bản trước (không có dữ liệu cần khôi phục)."
+        }
+      ]
+    }
+  ],
+  "subtasks": [
+    {
+      "id": "task01",
+      "slug": "memo-allday-lines",
+      "title": "buildMemo ghi dòng giá cả ngày",
+      "estimate_hours": 3
+    },
+    {
+      "id": "task02",
+      "slug": "form-pass-estimate",
+      "title": "Create / Edit truyền estimate vào buildMemo",
+      "estimate_hours": 2,
+      "depends_on": [
+        "task01"
+      ]
+    },
+    {
+      "id": "task03",
+      "slug": "tests-and-evidence",
+      "title": "Unit test và chạy checklist E2E",
+      "estimate_hours": 3,
+      "depends_on": [
+        "task01",
+        "task02"
+      ]
+    }
+  ]
+}

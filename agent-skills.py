@@ -832,7 +832,7 @@ def cmd_guard(args: argparse.Namespace) -> int:
 COMMAND_HELP = {
     "install": ("install the skills and the skill gate (UI reference, venv and CodeGraph are opt-in)", """\
 examples:
-  python3 agent-skills.py install                                   # all 18 skills into ~/.claude/skills
+  python3 agent-skills.py install                                   # all 19 skills into ~/.claude/skills
   python3 agent-skills.py install --dry-run                         # show what would happen, change nothing
   python3 agent-skills.py install --skills dev-orchestrate,test-safely
   python3 agent-skills.py install --target claude-project --project ~/work/shop
@@ -898,7 +898,7 @@ def build_parser() -> argparse.ArgumentParser:
         sub.add_argument("--project", help="project root for --target claude-project (default: current directory)")
         sub.add_argument("--target-dir", help="install into this skills directory instead of a named target")
         sub.add_argument("--render-paths", action="store_true", help="with --target-dir: replace ${CLAUDE_SKILL_DIR} with real paths")
-        sub.add_argument("--skills", help="comma-separated subset of skills (default: all 18)")
+        sub.add_argument("--skills", help="comma-separated subset of skills (default: all 19)")
         sub.add_argument("--dry-run", action="store_true", help="print what would be done; change nothing")
         sub.add_argument("--force", action="store_true", help="replace foreign or locally edited skills (backups are kept)")
         if name == "install":
