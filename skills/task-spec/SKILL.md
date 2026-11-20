@@ -2,7 +2,7 @@
 name: task-spec
 description: "Use when producing a written ticket spec or task plan with plan.html, subtasks and a test checklist. Triggers (vi): viết spec, lên plan cho ticket, chia task, estimate task, require.md, plan.html."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

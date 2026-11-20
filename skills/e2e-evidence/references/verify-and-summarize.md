@@ -4,7 +4,7 @@
 
 For every step of the case, in order:
 
-1. Open the screenshot(s) of the step and read what they show: URL, screen title, the fields and values under test, messages.
+1. Open the screenshot(s) of the step and read what they show: URL, screen title, the fields and values under test, messages. Each value the step names carries a red frame with a numbered tag; a missing, misplaced or covering frame means a retake, not a pass. The frame shows where to look — read the value itself, never the tag.
 2. Compare with the step's expected result word for word and number for number. Recompute every amount from the inputs (tax, rounding, tiers) instead of trusting either the screen or the checklist.
 3. Check the same value across every place it appears (form/memo, detail screen, PDF, calendar, CSV): they must agree.
 4. Decide the step: `PASS` (shown and matches), `NG` (shown and differs — write expected vs observed), `NO EVIDENCE` (no screenshot shows it), `NOT RUN`.
@@ -65,7 +65,7 @@ Rules the report relies on (`DS evidence report` reads them; other layouts show 
 
 - The `## Steps` table keeps exactly these columns: `Step | Checklist action | Image | What the image shows | Result`. One row per checklist step; the first cell is the step number (`2`, or `2-3` for one row covering two steps; several rows for one step are merged, the worst result wins).
 - `Result` is one of `PASS`, `NG`, `NO EVIDENCE`, `NOT RUN`; put explanations in the observation, not in this cell.
-- `What the image shows` lists the exact screen values, separated by ` / `; no paragraphs inside a table cell.
+- `What the image shows` lists the exact screen values, separated by ` / `, in the order of the frame numbers (`1: 備品 (1,100円)×1 / 2: 合計 31,460円`); no paragraphs inside a table cell.
 - `reason:` in the front matter is empty for OK and otherwise says in one line why the case is not OK (e.g. `Step 02 NG: memo rewritten when 編集 opens`) (the report's overview shows it); without it the first failing step is used.
 - Other sections (`## Cross-check`, `## Notes`, `## NG — reproduction`, a precondition deviation) each become their own block in the report; `## Conclusion` is shown at the top of the case.
 

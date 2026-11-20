@@ -2,7 +2,7 @@
 name: dev-orchestrate
 description: "Use when a repository task needs routing, from a question about its code to a ticket, fix, test, review or commit. Start here, then apply the skills for the requested work. Triggers (vi): làm task, sửa lỗi, tính năng, test, review, commit. General programming questions can be answered directly."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

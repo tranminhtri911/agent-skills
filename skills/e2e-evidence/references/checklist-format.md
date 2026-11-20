@@ -27,7 +27,7 @@ If the branch and the prompt disagree, or a rule is ambiguous (money, permission
 | Outputs | Every place the value appears: detail screen, PDF, CSV, email, calendar, API |
 | Errors | Validation and permission failures the change can trigger |
 
-Numbers are written out: inputs, the hand calculation and the expected screen text (`1,000 + 500 × 2 = 2,000`, `・DEMO Projector(1,100円)×1`).
+Each expected result names the screen title and the value to check (`カレンダーメモ: ◆備品 line …`, `合計(税込) = 31,460円`): they become the red frames of the screenshot. Numbers are written out: inputs, the hand calculation and the expected screen text (`1,000 + 500 × 2 = 2,000`, `・DEMO Projector(1,100円)×1`).
 
 ## Schema `devskills.e2e-checklist/1`
 

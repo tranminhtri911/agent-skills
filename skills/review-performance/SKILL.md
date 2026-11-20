@@ -2,7 +2,7 @@
 name: review-performance
 description: "Use when diagnosing slow code, resource growth or bottlenecks in threads, queries, caches, workers or large streams. Triggers (vi): chạy chậm, lag, treo, tối ưu hiệu năng, rò rỉ bộ nhớ, N+1, cache."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

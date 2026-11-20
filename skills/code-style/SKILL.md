@@ -2,7 +2,7 @@
 name: code-style
 description: "Use when applying repository and language conventions to names, control flow, types and patterns. Triggers (vi): đặt tên biến, đặt tên hàm, coding style, convention, if một dòng, lambda, repository pattern."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

@@ -33,13 +33,46 @@ Do not install packages or browsers without the user's approval.
 ## 3. Capture rules
 
 - At least one screenshot per step that has an expected result; take the screenshot after the screen settled (spinner gone, estimate recalculated, toast shown).
-- The value under test is inside the frame. Long forms: scroll to the section, or capture the element, and add `step02b_...` for the next part.
+- The value under test is inside the frame and marked with red frames (section 4). Long forms: scroll to the section, or capture the element, and add `step02b_...` for the next part.
 - Names: `stepNN[a-z]_<what-is-shown>.png`, lowercase, words joined by `-`: `step03b_booking-detail-amounts-qty3.png`. Preconditions `step00a_...`; extra proof `extra_...`; one image for two steps `step02-03_...`.
 - Viewport: desktop 1440×900 unless the case is about another device; use the same viewport for the whole task.
 - Record the record ids/numbers the run creates (e.g. booking UK1004) — the summary lists them and the cleanup uses them.
 - Do not capture secrets (tokens, passwords, API keys); mask or retake if one appears.
 
-## 4. Minimal Playwright (Node) step capture, outside the repository
+## 4. Frame what the step checks
+
+Before every step screenshot, draw red frames so the image says what it proves; clear them before the next action.
+
+| Kind | Drawn as | Put it on |
+| --- | --- | --- |
+| `area` | dashed frame | the section or card the step is about (memo block, amounts table) |
+| `title` | frame | the label or heading of the value (`カレンダーメモ`, `合計(税込)`) |
+| `value` (default) | thick frame, light fill, numbered tag | each value the expected result names: one line of a memo, an amount, a status |
+
+- Take the targets from the step's expected result: every value it names gets a `value` frame, with its title. The tag `label` is the title and the expected value (`備品 = (1,100円)×1`), short enough to read.
+- A memo or other multi-line field: `line:` frames just the line of its value that contains the text, not the whole field.
+- `e2eHighlight` returns `found: false` with a reason for a target it could not place. Fix the selector or text and draw again; never capture with a missing frame.
+- Frames sit outside the element with a light fill; if one still hides a value, use `kind: 'title'` for that target or take a `stepNNb` without it.
+- The project's own E2E suite (Playwright Test, Cypress): inject the same file before its screenshot call (`page.addScriptTag`, `cy.window().then(...)`) when the suite allows a helper; otherwise frame the screenshots it produced as below.
+
+Load it from this skill's folder (`<skill dir>/assets/highlight.js`); a browser tool that only evaluates JavaScript can paste the file's content.
+
+**Screenshots you were given** (manual run, the suite's output): keep the original in `<case>/raw/` (the report ignores sub folders), show it 1:1 in a blank page, frame the spots by pixel rectangle and save the framed image under the step name:
+
+```js
+const png = fs.readFileSync(`${caseDir}/raw/step03_detail.png`);
+await page.setViewportSize({ width: png.readUInt32BE(16), height: png.readUInt32BE(20) }); // PNG width/height
+await page.setContent(`<body style="margin:0"><img id="shot" src="data:image/png;base64,${png.toString('base64')}"></body>`);
+await page.addScriptTag({ path: highlightJs });
+await page.evaluate((targets) => window.e2eHighlight(targets, { scroll: false }), [
+  { kind: 'value', rect: [1124, 222, 130, 30], label: '合計 = 31,460円' },   // x, y, width, height in image pixels
+]);
+await page.locator('#shot').screenshot({ path: `${caseDir}/step03_detail-total.png` });
+```
+
+Use a page with `deviceScaleFactor: 1` so image pixels and page pixels match.
+
+## 5. Minimal Playwright (Node) step capture, outside the repository
 
 ```js
 // capture.cjs — run from a scratch directory: node capture.cjs
@@ -48,6 +81,7 @@ const { chromium } = require('playwright'); // an installed copy; do not add it 
   const caseDir = '/abs/path/<root>/<task>/<case-id>_<slug>';
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'ja-JP', timezoneId: 'Asia/Tokyo' });
+  const highlightJs = '/abs/path/.claude/skills/e2e-evidence/assets/highlight.js';
   const shot = async (name) => page.screenshot({ path: `${caseDir}/${name}.png`, fullPage: false });
   await page.goto('http://127.0.0.1:8000/login');
   // ... log in with the test account the user gave
@@ -55,8 +89,17 @@ const { chromium } = require('playwright'); // an installed copy; do not add it 
   await shot('step01_create-form');
   await page.fill('#quantity', '3');
   await page.waitForTimeout(1000); // the estimate recalculates after input
-  await page.locator('#calendar-memo').scrollIntoViewIfNeeded();
+  await page.addScriptTag({ path: highlightJs }); // again after every navigation: a new page drops it
+  const frames = await page.evaluate((targets) => window.e2eHighlight(targets), [
+    { kind: 'area', selector: '#calendar-memo-section' },
+    { kind: 'title', text: 'カレンダーメモ' },
+    { kind: 'value', selector: '#calendar-memo', line: '(1,100円)×3', label: '備品 = (1,100円)×3' },
+  ]);
+  if (frames.some((frame) => !frame.found)) {
+    throw new Error(JSON.stringify(frames)); // fix the target instead of capturing without its frame
+  }
   await shot('step02_memo-equipment-lines');
+  await page.evaluate(() => window.e2eClearHighlight());
   await browser.close();
 })();
 ```

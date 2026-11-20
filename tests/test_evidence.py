@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
+import subprocess
 import unittest
 
 from devskills import evidence
@@ -209,6 +211,30 @@ class StepTableTest(unittest.TestCase):
         self.assertEqual(steps[3]["images"], ["step02-03_form.png", "step03b_memo.png"])
         self.assertEqual(steps[4]["status"], "NO_EVIDENCE", "a continuation row belongs to the previous step")
         self.assertEqual(steps[4]["observed"], ["top", "no total visible"])
+
+
+class HighlightAssetTest(unittest.TestCase):
+    """The red-frame helper the skill injects before each step screenshot (E2E-004)."""
+
+    ASSET = REPO_ROOT / "skills/e2e-evidence/assets/highlight.js"
+
+    def test_asset_exposes_draw_and_clear_and_the_skill_points_to_it(self):
+        source = self.ASSET.read_text(encoding="utf-8")
+        for name in ("global.e2eHighlight = e2eHighlight", "global.e2eClearHighlight = e2eClearHighlight"):
+            self.assertIn(name, source)
+        for kind in ("'area'", "'title'"):
+            self.assertIn(kind, source, "area and title frames are drawn differently from values")
+        self.assertIn("pointer-events:none", source, "the overlay must not intercept clicks of the next step")
+        skill = (REPO_ROOT / "skills/e2e-evidence/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("(assets/highlight.js)", skill)
+        capture = (REPO_ROOT / "skills/e2e-evidence/references/run-and-capture.md").read_text(encoding="utf-8")
+        self.assertIn("e2eHighlight", capture)
+        self.assertIn("raw/", capture, "a given screenshot keeps its original next to the framed copy")
+
+    @unittest.skipUnless(shutil.which("node"), "node is not installed")
+    def test_asset_is_valid_javascript(self):
+        completed = subprocess.run(["node", "--check", str(self.ASSET)], capture_output=True, text=True, check=False)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
 
 
 class MarkdownTest(unittest.TestCase):
