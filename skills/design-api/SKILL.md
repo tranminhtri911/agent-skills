@@ -2,7 +2,7 @@
 name: design-api
 description: "Use when analyzing or changing an HTTP API, webhook or event contract, including payloads, pagination, errors, compatibility and endpoint idempotency. Triggers (vi): thêm API, sửa endpoint, request/response, webhook, phân trang API, mã lỗi."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

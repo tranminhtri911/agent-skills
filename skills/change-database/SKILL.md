@@ -2,7 +2,7 @@
 name: change-database
 description: "Use when inspecting or changing database queries, schema, ORM, migrations, records, indexes, transactions or locks, including data-backed lists and deletes. Triggers (vi): DB, SQL, truy vấn, migration, thêm cột, xóa dữ liệu, khóa bản ghi, sao lưu DB."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

@@ -267,6 +267,12 @@
       "skill": "code-documentation",
       "task": "Thêm API POST /api/orders/{id}/cancel và job gửi email hủy đơn; viết comment cho code mới",
       "expect": "loads code-documentation with write-maintainable-code, code-style, design-api, implement-backend and design-reliability; reads the handler, exception filters and queue/scheduler config before writing docs; documents the endpoint purpose, path, auth, response and only the status codes the handler and framework actually return, and the job's trigger, retry and side effects exactly as configured (no invented retry counts or schedules); uses the repository's existing doc style (Target blocks only if the project uses them) and the language's native syntax; adds no comments to trivial getters, unrelated files or existing methods the change only updates; corrects only an existing comment the change made false; runs the DOC-012 checklist before handover (DOC-007..012)"
+    },
+    {
+      "id": "EV56",
+      "skill": "delegate-subagent",
+      "task": "Đang sửa màn hình 案件編集 cho no63_5; đọc thêm file spec Excel 30 sheet của khách để đối chiếu điều kiện 終日料金, đồng thời chạy lại toàn bộ E2E checklist của no63_5 trên localhost",
+      "expect": "loads delegate-subagent with e2e-evidence and test-safely; keeps the 案件編集 source already read in the main thread; delegates the Excel spec to one sonnet subagent with a brief naming the sheets, the question about 終日料金, read-only scope and a return limit with Sheet!cell sources and exact quotes; delegates the E2E run to a background subagent whose brief names the local target, the skills to load (e2e-evidence, test-safely, verify-ui) and a 20-line return contract; launches both in one message, keeps editing only files neither subagent touches, does not poll or invent results; verifies the one or two spec facts the edit depends on before changing code; relays verdicts and sources, not the full reports, and names what was delegated and verified (DLG-001..005)"
     }
   ]
 }

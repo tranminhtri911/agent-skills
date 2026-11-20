@@ -2,7 +2,7 @@
 name: implement-backend
 description: "Use when analyzing or implementing server-side logic, including handlers, services, jobs, uploads and external clients. Triggers (vi): backend, xử lý nghiệp vụ, controller, service, job nền, batch, upload file."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

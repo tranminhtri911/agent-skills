@@ -2,7 +2,7 @@
 name: design-infrastructure
 description: "Use when reviewing or changing cloud infrastructure or infrastructure code, including networks, compute, storage, managed databases or IAM. Triggers (vi): hạ tầng, AWS, GCP, Terraform, VPC, Cloud Run, security group."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 

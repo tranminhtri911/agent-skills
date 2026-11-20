@@ -2,7 +2,7 @@
 name: dev-orchestrate
 description: "Use when a repository task needs routing, from a question about its code to a ticket, fix, test, review or commit. Start here, then apply the skills for the requested work. Triggers (vi): làm task, sửa lỗi, tính năng, test, review, commit. General programming questions can be answered directly."
 metadata:
-  version: "1.0.7"
+  version: "1.0.8"
   suite: devskills
 ---
 
@@ -27,6 +27,7 @@ Load this router first for repository work. Identify the requested action (inspe
 - Writing automated tests → test-safely. Executing or reporting E2E/manual cases with per-step evidence → e2e-evidence alongside test-safely. Rendered UI runs also apply the UI verification rule above.
 - Infrastructure → design-infrastructure; source edits → write-maintainable-code and code-style. Write-maintainable-code owns behavior preservation, structure and comment upkeep. Code-style owns naming, formatting and language patterns. When available, load code-documentation for new code that needs documentation and for explicit requests to add comments or docstrings.
 - Project document search/updates → index-project-knowledge; diff review → review-code.
+- Reading a new document or source tree beyond what the session already holds, or independent long-running work (build, test suite, E2E run) → delegate-subagent, when the host supports subagents (DLG-001). The main thread keeps decisions, edits and approvals.
 
 **Order with superpowers, one plan per task (ROUTE-002).** Start with this router. Apply the relevant superpowers process (debugging, brainstorming or planning), then the owners for the current phase. Apply test-driven-development when implementing behavior and verification-before-completion and review-code before handover. For a ticket spec, task-spec owns `specs/<task>/plan.html` and replaces brainstorming and writing-plans. For other written plans, use the location chosen by design-change. Put the design and plan in that one document even when superpowers suggests `docs/superpowers/`.
 

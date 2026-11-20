@@ -34,7 +34,7 @@ ALL_SKILLS = [
     "design-api", "implement-backend", "implement-frontend", "verify-ui",
     "design-reliability", "review-performance", "review-security", "test-safely",
     "design-infrastructure", "write-maintainable-code", "code-style", "index-project-knowledge",
-    "review-code", "e2e-evidence", "task-spec", "code-documentation",
+    "review-code", "e2e-evidence", "task-spec", "code-documentation", "delegate-subagent",
 ]
 BASE_EDIT = ["dev-orchestrate", "discover-codebase", "write-maintainable-code", "code-style"]
 
@@ -305,6 +305,29 @@ DOC_REQUEST_RE = re.compile(
 )
 
 
+# New material to read or work to run beside the main thread: delegate-subagent (DLG-001) keeps it out of the
+# main context. Advice only: it never blocks an edit.
+DELEGATION_RE = re.compile(
+    r"\b(?:doc|read|phan\s+tich|analy[sz]e|tom\s+tat|summari[sz]e|tong\s+hop|doi\s+chieu|kiem\s+tra|ra\s+soat|"
+    r"check|review|so\s+sanh|compare)\s+"
+    r"(?:(?:toan\s+bo|het|tat\s+ca|ca|all|the\s+whole|whole|entire|cac|nhieu|lai)\s+)+"
+    r"(?:folder|thu\s+muc|tai\s+lieu|docs?|documents?|source|repo|module|files?|spec|log|task|man\s+hinh|api|endpoint)"
+    r"|\b(?:tom\s+tat|summari[sz]e)\s+(?:(?:the|cac)\s+)?(?:folder|thu\s+muc|tai\s+lieu|documents?|docs|files?|spec|log)"
+    r"|\b(?:doc|read)\s+(?:(?:file|them)\s+)?(?:tai\s+lieu|spec|excel|pdf|word)"
+    r"|\b(?:tim|find|liet\s+ke|list)\s+(?:moi|tat\s+ca|het|all|every)\b"
+    r"|\bsong\s+song\b|\bchay\s+nen\b|\bo\s+nen\b|\bin\s+parallel\b|\bin\s+the\s+background\b"
+    r"|\bsub\s*-?\s*agents?\b|\btach\s+agent\b|\bdelegate\b"
+)
+DELEGATION_HINT = (
+    "\nThis request reads new material or runs work beside the main thread: load delegate-subagent (if available) "
+    "before reading or running anything. Two or more independent tasks in the request: one subagent per task, all "
+    "launched in one message, whatever their size. A single task: material not already in this session and larger "
+    "than a small lookup goes to "
+    "a subagent (sonnet; haiku with effort high for mechanical search) that returns a short sourced result; "
+    "independent long runs go to a background subagent (DLG-001, DLG-002)."
+)
+
+
 def area_text(skill, text):
     """The request text one area is matched against, without the phrases another skill owns."""
     ignored = AREA_IGNORED_PHRASES.get(skill)
@@ -332,6 +355,9 @@ def route_prompt(prompt):
     artifact_only = bool(ARTIFACT_ONLY_RE.search(text)) and set(areas) <= {"e2e-evidence", "index-project-knowledge"}
     build = bool(BUILD_RE.search(text)) and not (plan_only or artifact_only)
 
+    if DELEGATION_RE.search(text):
+        # Listed first so it is loaded before anything is read into the main context.
+        areas.insert(0, "delegate-subagent")
     if DATA_DELETE_RE.search(text) and "change-database" not in areas:
         areas.append("change-database")
     if DOC_READ_RE.search(text):
@@ -364,6 +390,7 @@ def route_prompt(prompt):
         "feature": bool(FEATURE_RE.search(text)),
         "plan": plan_only or (bool(PLAN_RE.search(text)) and "design-change" in areas and "task-spec" in areas),
         "documentation": bool(DOC_REQUEST_RE.search(text)),
+        "delegation": bool(DELEGATION_RE.search(text)),
         "documentation_only": documentation_only,
         "follow_up": bool(FOLLOW_UP_RE.fullmatch(text.rstrip(".!? ").removeprefix("ok "))),
         "review_feedback": bool(REVIEW_FEEDBACK_RE.search(text)),
@@ -565,8 +592,9 @@ RULE = (
     "implementation and verification phases. Route from the current request and confirmed effects. "
     "Print `Skills: ...` before the first edit and list only loaded skills under `Skills applied`. "
     "Load code-documentation for new code that needs documentation or when the user explicitly asks to add comments or docstrings, "
-    "if the skill is available. Keep the comments in scope. For routine maintenance, follow write-maintainable-code. Code edits and "
-    "test/DB/commit commands are blocked until their skills are loaded."
+    "if the skill is available. Keep the comments in scope. For routine maintenance, follow write-maintainable-code. "
+    "Delegate reading a new large document or source tree, and independent long runs, to a subagent per "
+    "delegate-subagent when available. Code edits and test/DB/commit commands are blocked until their skills are loaded."
 )
 
 
@@ -597,6 +625,8 @@ def cmd_prompt(p):
                                                                                 ", ".join(todo)))
     if is_work and route["documentation"]:
         text += "\nThis request explicitly adds code comments or docstrings. Load code-documentation if available."
+    if route["delegation"]:
+        text += DELEGATION_HINT
     emit({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": text}})
 
 
@@ -737,10 +767,11 @@ def cmd_gate(p):
 
 def cmd_subagent(p):
     emit({"hookSpecificOutput": {"hookEventName": "SubagentStart", "additionalContext": (
-        "SKILL GATE: subagents do not inherit loaded skills. Read your task, decide what it touches (data, "
-        "screens, endpoints, external calls, auth, tests...) and load dev-orchestrate plus those domain skills "
-        "with the Skill tool before working. Code edits and test/DB/commit commands are blocked until they are "
-        "loaded. Report only skills you actually loaded.")}})
+        "SKILL GATE: subagents do not inherit loaded skills. A read-only task (read, search, summarize) that "
+        "edits nothing and runs no test, database or commit command needs none: keep your context for the task. "
+        "Otherwise decide what it touches (data, screens, endpoints, external calls, auth, tests...) and load "
+        "dev-orchestrate plus those domain skills with the Skill tool before working. Code edits and "
+        "test/DB/commit commands are blocked until they are loaded. Report only skills you actually loaded.")}})
 
 
 def cmd_compact(p):
