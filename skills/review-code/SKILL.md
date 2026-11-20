@@ -2,7 +2,7 @@
 name: review-code
 description: "Use when reviewing a code diff, PR, commit or implementation for behavior, safety and regression risk. Triggers (vi): review code, review PR, xem diff, tự review, kiểm tra code trước khi merge."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

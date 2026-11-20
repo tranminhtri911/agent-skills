@@ -2,7 +2,7 @@
 name: design-change
 description: "Use when evaluating approaches, feasibility, impact, tradeoffs, rollout or risks for a repository change, including cross-system changes. Triggers (vi): đề xuất giải pháp, khả thi, phân tích tác động, lên kế hoạch, ước lượng, kiến trúc."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

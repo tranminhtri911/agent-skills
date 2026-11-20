@@ -2,7 +2,7 @@
 name: code-documentation
 description: "Use when documenting new code that needs explanation or explicitly adding code comments or docstrings. Triggers (vi): thêm comment, viết docstring, bổ sung chú thích, ghi chú cho hàm, tài liệu code."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

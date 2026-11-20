@@ -2,7 +2,7 @@
 name: design-reliability
 description: "Use when handling duplicate effects, partial failures, retries, timeouts, recovery or delivery across jobs and external systems. Triggers (vi): gửi trùng, job chạy trùng, thử lại, mất mạng, timeout, đồng bộ, sao lưu lên Drive."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

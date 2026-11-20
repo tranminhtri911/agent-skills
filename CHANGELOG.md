@@ -2,6 +2,10 @@
 
 Every committed change bumps the suite version by one patch step (1.0.0 → 1.0.1 → 1.0.2) in `pyproject.toml`, `src/devskills/__init__.py`, every `skills/*/SKILL.md` `metadata.version` and a section below; `SuiteVersionTest` fails when they disagree.
 
+## 1.0.7 (2026-11-20)
+
+- e2e-evidence: every step screenshot marks what it proves with red frames before capture — a dashed frame for the area, a frame for the title (label) and a thick filled frame with a numbered tag (`1  合計 = 31,460円`) for each value the expected result names. New `assets/highlight.js` (`e2eHighlight` / `e2eClearHighlight`) finds targets by CSS selector, visible text or a pixel rectangle, frames a single line of a memo/textarea (scrolling the field so the lines are in view), places tags where they cover no frame or text, and reports targets it could not place. Screenshots given by the user are framed by rectangle with the original kept in `<case>/raw/`. Verification retakes a screenshot whose frame is missing, misplaced or hides the value; summaries list values in frame order; checklists name the title and value of each expected result.
+
 ## 1.0.6 (2026-11-20)
 
 - New `code-documentation` skill (20th): what to document per kind of code — class/interface, method/function, complex logic, constants/config, database/model, API endpoint, background job/event, security/performance decision — with examples in `references/categories.md` (rules DOC-007..012, scenario EV55). Comments state only behavior verified in the implementation (status codes, retries, schedules and constraints from the code and its configuration), follow user instructions → repository convention → language standard → skill (`Target:` blocks only where they fit), use the language's native doc syntax, are added automatically to new code only (existing code a change updates gets no new or rewritten docs, except a comment the change made false; more only when the user asks) and are checked against a quality checklist before handover.

@@ -2,7 +2,7 @@
 name: index-project-knowledge
 description: "Use when locating or verifying project requirements and documents, or building or refreshing their searchable index. Triggers (vi): đọc docs, tìm tài liệu, index tài liệu, đọc spec, file Excel, file Word, PDF."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 

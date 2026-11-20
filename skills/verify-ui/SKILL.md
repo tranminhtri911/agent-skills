@@ -2,7 +2,7 @@
 name: verify-ui
 description: "Use when inspecting rendered web or mobile UI, diagnosing layout defects, capturing screenshots or running UI E2E. Triggers (vi): kiểm tra UI, review giao diện, kiểm tra responsive, vỡ layout, tràn chữ, chụp màn hình."
 metadata:
-  version: "1.0.6"
+  version: "1.0.7"
   suite: devskills
 ---
 
